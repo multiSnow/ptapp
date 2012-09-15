@@ -94,12 +94,18 @@ def process_url(tco_expanded_urls):
      tco_expanded_query,
      tco_expanded__)=urlparse.urlparse(tco_expanded_urls['expanded_url'])
     if API_IMPROVE_FULL_EXP_SHORTURL==1:
-        if tco_expanded_netloc in origurl_dict:
+        while tco_expanded_netloc in origurl_dict:
             exp_func=origurl_dict[tco_expanded_netloc]
             tco_expanded_urls['expanded_url']=exp_func(tco_expanded_urls['expanded_url'])
+            (tco_expanded_scm,
+             tco_expanded_netloc,
+             tco_expanded_path,
+             tco_expanded_params,
+             tco_expanded_query,
+             tco_expanded__)=urlparse.urlparse(tco_expanded_urls['expanded_url'])
     if tco_expanded_netloc in insecurl_dict:
-        exp_func=insecurl_dict[tco_expanded_netloc]
-        tco_expanded_urls['expanded_url']=exp_func(tco_expanded_urls['expanded_url'])
+        sec_func=insecurl_dict[tco_expanded_netloc]
+        tco_expanded_urls['expanded_url']=sec_func(tco_expanded_urls['expanded_url'])
     tco_expanded_urls['display_url']=tco_expanded_urls['expanded_url']
     return 0
 
