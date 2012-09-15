@@ -92,13 +92,19 @@ class MainPage(webapp2.RequestHandler):
             self.response.out.write('Server Error:<br/>')
             self.response.out.write(error_message)
         else:
-            self.response.headers['Content-Type']='text/html'
             if data.status_code>=500:
+                self.response.headers['Content-Type']='application/json'
                 self.response.out.write('{"error":"Twitter / Over capacity"}')
             elif API_IMPROVE==1 and method=='GET' and new_path.endswith('.json') and data.status_code<400:
+                self.response.headers['Content-Type']='application/json'
                 self.response.out.write(improve.api_improve(data.content))
-            else:
+            else: 
+                if new_path.endswith('.xml'):
+                    self.response.headers['Content-Type']='application/xml'
+                else:
+                    self.response.headers['Content-Type']='application/json'
                 self.response.out.write(data.content)
+        return 0
 
     def post(self):
         self.do_proxy('POST')
@@ -108,7 +114,7 @@ class MainPage(webapp2.RequestHandler):
 
 class OAuthPage(webapp2.RequestHandler):
     def get(self):
-        self.response.headers['Content-Type']='text/html'
+        self.response.headers['Content-Type']='text/plain'
         self.response.out.write('oauth_token=%s&oauth_token_secret=%s&user_id=%s&screen_name=%s&x_auth_expires=0'
                                 %(ACCESS_TOKEN,
                                   ACCESS_TOKEN_SECRET,
