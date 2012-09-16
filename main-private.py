@@ -2,7 +2,7 @@
 
 import urlparse,base64,logging,webapp2,json
 from cgi import parse_qsl
-from google.appengine.api import urlfetch
+from google.appengine.api import urlfetch,urlfetch_errors
 import oauth,improve
 
 CONSUMER_KEY=''

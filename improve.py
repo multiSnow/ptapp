@@ -2,7 +2,7 @@
 
 import urlparse,json
 from threading import Thread
-from google.appengine.api import urlfetch
+from google.appengine.api import urlfetch,urlfetch_errors
 
 API_IMPROVE_HTTPS_IMG=1
 API_IMPROVE_LINK=1

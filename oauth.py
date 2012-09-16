@@ -1,6 +1,6 @@
 #coding: utf8
 
-from google.appengine.api import urlfetch
+from google.appengine.api import urlfetch,urlfetch_errors
 from google.appengine.ext import db
 
 from cgi import parse_qs,parse_qsl
