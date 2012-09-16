@@ -172,6 +172,7 @@ origurl_dict={'goo.gl':exp_googl,
               'tinyurl.com':exp_common,
               'gobrcm.com':exp_common,
               'instagr.am':exp_common,
+              'db.tt':exp_common,
               't.cn':exp_common}
 
 insecurl_dict={'img.ly':https_wrap,
