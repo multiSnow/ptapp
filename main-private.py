@@ -30,7 +30,7 @@ USER_PASSWORD=''
 ACCESS_TOKEN=''
 ACCESS_TOKEN_SECRET=''
 
-API_IMPROVE=1
+API_IMPROVE=0
 
 ptapp_message='''
 <html><head>
