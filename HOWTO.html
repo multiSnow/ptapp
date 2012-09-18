@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>最终用户指南</title>
+  </head>
+  <body>
+    <p>（好吧我的英文等级还没有高到能够写大段的文档）</p>
+    <h1>最终用户指南</h1>
+    <h2>PTAPP——Personal Twitter Api Proxy in Python，即“基于Python的个人用推特应用代理”。<br/>由于是“个人用”的，不像gtap的主模式那样上传了就能用。</h2>
+    <ol>
+      <li>获取代码：<blockquote><code>git clone git://github.com/multiSnow/ptapp.git</code></blockquote></li>
+      <li>注册应用：
+	<p>登录<a href="https://dev.twitter.com/user/login" rel="nofollow" target="_blank">Twitter Developers</a>，点击<a href="https://dev.twitter.com/apps/new" rel="nonfollow" target="_blank">Create a new application</a>，在标题末尾有“<code style="color:red">*</code>”号的地方填入你喜欢的内容。至于Callback URL，可以填，可以不填，没有任何影响。<br/>
+	  注册成功后进入应用的“Details”页面。可以看到“Access level”的值是“Read-only”，也就是说这个应用只能读取一些基本页面。如果想要发送和读取DM，需要设置。<br/>
+	  进入应用的“Settings”页面，找到“Application type”的“Access”，根据自己的需要选择适合的权限。<br/>
+	  保存更改后再进入应用的“Details”页面，在“Your access token”中可以看到一个“Create my access token”的按钮。点击后页面刷新，可以看到“Your access token”中多了一些内容。<br/>
+	  保持这个页面直到所有工作完成</p></li>
+      <li>配置PTAPP基本选项：
+	<p>打开源代码中的main-private.py文件，找到以下内容：
+	  <blockquote><code>
+	      CONSUMER_KEY=''<br/>
+	      CONSUMER_SECRET=''<br/>
+	      <br/>
+	      SCREEN_NAME=''<br/>
+	      USER_PASSWORD=''<br/>
+	      ACCESS_TOKEN=''<br/>
+	      ACCESS_TOKEN_SECRET=''<br/>
+	  </code></blockquote>
+	  按照如下方式填入：
+	  <blockquote><code>
+	      CONSUMER_KEY='Consumer key'<br/>
+	      CONSUMER_SECRET='Consumer secret'<br/>
+	      <br/>
+	      SCREEN_NAME='twitter的用户名'<br/>
+	      USER_PASSWORD='一个包含大小写字母和数字的字符串'<br/>
+	      ACCESS_TOKEN='Access token'<br/>
+	      ACCESS_TOKEN_SECRET='Access token secret'<br/>
+	  </code></blockquote>
+	  其中的“Consumer key”、“Consumer secret”、“Access token”、“Access token secret”都可以在第二步最后获得的页面中找到，“twitter的用户名”就是account的username。<br/>
+	  至于“一个包含大小写字母和数字的字符串”，这将作为API地址的一部分，是PTAPP识别访问者的唯一手段，因此为了帐户的安全，请将这个字符串设置得长一些、复杂一些（不要像twip那样只有6个字符）。<br/>
+	  现在你可以关闭第二步最后获得的页面了。</p></li>
+      <li>配置PTAPP扩展功能（可选）：
+	<p>PTAPP有一些很简单的扩展功能。main-private.py中的
+	  <blockquote><code>API_IMPROVE=0</code></blockquote>
+	  禁用了所有扩展功能。要启用扩展功能，将其修改为：
+	  <blockquote><code>API_IMPROVE=1</code></blockquote>
+	  各扩展功能配置均在improve.py文件内。<br/>
+	  各扩展功能的说明和配置方法如下：<br/>
+	  <ul>
+	    <li>头像链接https化：
+	      <p>使客户端必然以https获取大多数基本页面中的头像图片。<br/>
+		编辑improve.py，使：
+		<blockquote><code>API_IMPROVE_HTTPS_IMG=1</code></blockquote>
+	    </p></li>
+	    <li>部分图床链接https化：
+	      <p>将部分图床的链接修改成https
+		编辑improve.py，使：
+		<blockquote><code>API_IMPROVE_LINK=1</code></blockquote>
+		目前可以https化的图床链接仅twitter提供的图床、img.ly和twitpic.com。
+	    </p></li>
+	    <li>展开一次短链接（需要启用“部分图床链接https化”）：
+	      <p>将能够识别的短链接展开一次。<br/>
+		<b>注意：这是一个危险的选项，可能延迟PTAPP返回信息的时间、增加appengine的负载，并可能展开失败（取决于GAE服务器到各短链接服务器的网络状况）。</b><br/>
+		编辑improve.py，使：
+		<blockquote><code>API_IMPROVE_EXP_SHORTURL=1</code></blockquote>
+		目前可以识别并展开的短链接地址：goo.gl、bit.ly、bitly.com、j.mp、4sq.com、is.gd、tinyurl.com、gobrcm.com、instagr.am、db.tt、t.cn。<br/>
+		其中展开bit.ly、bitly.com、j.mp、4sq.com的短链接需要在bitly.com注册应用并填入“BITLY_LOGIN”和“BITLY_APIKEY”才能正常工作。
+	    </p></li>
+	    <li>完全展开短链接（需要启用“展开一次短链接”）：
+	      <p>展开能够识别的短链接，并且当展开后的链接依然是短链接时再次展开，直到链接无法被识别为短链接为止。<br/>
+		<b>警告：这是一个非常危险的选项，可能大幅度延迟PTAPP返回信息的时间、明显增加appengine的负载、频繁的展开失败甚至出现服务器端错误。<br/>
+		  这个功能基本上是没有实用价值的，因为一般来说没有谁会这么闲地去把一个短链接再缩短一次，而且一些短链接提供商会阻止缩短一个短链接。<br/>
+		  所以，除非确切希望启用并确实有必要，否则永远不要启用这个扩展功能。</b><br/>
+		编辑improve.py，使：
+		<blockquote><code>API_IMPROVE_FULL_EXP_SHORTURL=1</code></blockquote>
+	    </p></li>
+	</ul></p>
+      </li>
+      <li>注册、申请appengine并上传：
+	<p>访问<a href="https://appengine.google.com" rel="nofollow" target="_blank">Google App Engine</a>，登录或注册，申请appid。<br/>
+	  使用<a href="https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python" rel="nofollow" target="_blank">Google App Engine SDK for Python</a>最新版本上传。<br/>
+      </p></li>
+      <li>配置客户端，开始使用：
+	<p>支持api代理的twitter客户端（<a href="http://twmode.sourceforge.net/" rel="nofollow" target="_blank">twittering-mode</a>、<a href="http://hotot.org/" rel="nofollow" target="_blank">hotot</a>）（<a href="https://seesmic.com/" rel="nofollow" target="_blank">seesmic</a>、<a href="https://play.google.com/store/apps/details?id=org.mariotaku.twidere" rel="nofollow" target="_blank">twidere</a>、<a href="http://darkhandz.com/twicca-mod/" rel="nofollow" target="_blank">twicca修改版</a>）。<br/>
+	  api代理地址填入
+	  <blockquote><code>{appid}.appspot.com/{第三步中设定的那个包含大小写字母和数字的字符串}/</code></blockquote>
+	  至于开头的“https://”根据不同的客户端考虑是否添加。</p></li>
+      <li>enjoy!</li>
+    </ol>
+  </body>
+</html>
