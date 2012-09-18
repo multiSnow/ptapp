@@ -17,7 +17,7 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-import urlparse,base64,logging,webapp2,json
+import urlparse,logging,webapp2
 from cgi import parse_qsl
 from google.appengine.api import urlfetch,urlfetch_errors
 import oauth,improve
