@@ -133,32 +133,38 @@ def identify_url(input_obj):
         if 'entities' in input_obj:
             if 'urls' in input_obj['entities']:
                 for i in range(len(input_obj['entities']['urls'])):
-                    mt=Thread(target=process_url,args=(input_obj['entities']['urls'][i],))
-                    mt.start()
+                    process_url(input_obj['entities']['urls'][i])
+                    input_obj['text']=input_obj['text'].replace(input_obj['entities']['urls'][i]['url'],input_obj['entities']['urls'][i]['expanded_url'])
+                    input_obj['entities']['urls'][i]['url']=input_obj['entities']['urls'][i]['expanded_url']
             if 'media' in input_obj['entities']:
                 for i in range(len(input_obj['entities']['media'])):
-                    mt=Thread(target=process_media,args=(input_obj['entities']['media'][i],))
-                    mt.start()
+                    process_media(input_obj['entities']['media'][i])
+                    input_obj['text']=input_obj['text'].replace(input_obj['entities']['media'][i]['url'],input_obj['entities']['media'][i]['expanded_url'])
+                    input_obj['entities']['media'][i]['url']=input_obj['entities']['media'][i]['expanded_url']
         if 'retweeted_status' in input_obj:
             if 'entities' in input_obj['retweeted_status']:
                 if 'urls' in input_obj['retweeted_status']['entities']:
                     for i in range(len(input_obj['retweeted_status']['entities']['urls'])):
-                        mt=Thread(target=process_url,args=(input_obj['retweeted_status']['entities']['urls'][i],))
-                        mt.start()
+                        process_url(input_obj['retweeted_status']['entities']['urls'][i])
+                        input_obj['retweeted_status']['text']=input_obj['retweeted_status']['text'].replace(input_obj['retweeted_status']['entities']['urls'][i]['url'],input_obj['retweeted_status']['entities']['urls'][i]['expanded_url'])
+                        input_obj['retweeted_status']['entities']['urls'][i]['url']=input_obj['retweeted_status']['entities']['urls'][i]['expanded_url']
                 if 'media' in input_obj['retweeted_status']['entities']:
                     for i in range(len(input_obj['retweeted_status']['entities']['media'])):
-                        mt=Thread(target=process_media,args=(input_obj['retweeted_status']['entities']['media'][i],))
-                        mt.start()
+                        process_media(input_obj['retweeted_status']['entities']['media'][i])
+                        input_obj['retweeted_status']['text']=input_obj['retweeted_status']['text'].replace(input_obj['retweeted_status']['entities']['media'][i]['url'],input_obj['retweeted_status']['entities']['media'][i]['expanded_url'])
+                        input_obj['retweeted_status']['entities']['media'][i]['url']=input_obj['retweeted_status']['entities']['media'][i]['expanded_url']
         if 'status' in input_obj:
             if 'entities' in input_obj['status']:
                 if 'urls' in input_obj['status']['entities']:
                     for i in range(len(input_obj['status']['entities']['urls'])):
-                        mt=Thread(target=process_url,args=(input_obj['status']['entities']['urls'][i],))
-                        mt.start()
+                        process_url(input_obj['status']['entities']['urls'][i])
+                        input_obj['status']['text']=input_obj['status']['text'].replace(input_obj['status']['entities']['urls'][i]['url'],input_obj['status']['entities']['urls'][i]['expanded_url'])
+                        input_obj['status']['entities']['urls'][i]['url']=input_obj['status']['entities']['urls'][i]['expanded_url']
                 if 'media' in input_obj['status']['entities']:
                     for i in range(len(input_obj['status']['entities']['media'])):
-                        mt=Thread(target=process_media,args=(input_obj['status']['entities']['media'][i],))
-                        mt.start()
+                        process_media(input_obj['status']['entities']['media'][i])
+                        input_obj['status']['text']=input_obj['status']['text'].replace(input_obj['status']['entities']['media'][i]['url'],input_obj['status']['entities']['media'][i]['expanded_url'])
+                        input_obj['status']['entities']['media'][i]['url']=input_obj['status']['entities']['media'][i]['expanded_url']
     return 0
 
 def api_improve(content):
