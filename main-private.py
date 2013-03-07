@@ -20,7 +20,7 @@
 import urlparse,logging,webapp2
 from cgi import parse_qsl
 from google.appengine.api import urlfetch,urlfetch_errors
-import oauth,improve
+import oauth
 
 CONSUMER_KEY=''
 CONSUMER_SECRET=''
@@ -30,7 +30,7 @@ USER_PASSWORD=''
 ACCESS_TOKEN=''
 ACCESS_TOKEN_SECRET=''
 
-API_IMPROVE=0
+API_IMPROVE=1
 
 ptapp_message='''
 <html><head>
@@ -39,7 +39,7 @@ ptapp_message='''
 </head>
 <body text=#000000 bgcolor=#ffffff>
 <h1>Error: Not Found</h1>
-<h2>The requested URL <code>#request_path#</code> was not found on this server.</h2>
+<h2>The requested URL <code>{0}</code> was not found on this server.</h2>
 <h2></h2>
 </body></html>'''
 
@@ -53,12 +53,12 @@ class MainPage(webapp2.RequestHandler):
         if path_parts[2]=='api':
             path_parts=path_parts[3:]
             path_parts.insert(0,'/')
-            new_path='/'+'/'.join(path_parts[1:]).replace('//','/')
+            new_path='/{0}'.format('/'.join(path_parts[1:]).replace('//','/'))
             new_netloc='api.twitter.com'
         elif path_parts[2]=='searchapi':
             path_parts=path_parts[3:]
             path_parts.insert(0,'/')
-            new_path='/'+'/'.join(path_parts[1:]).replace('//','/')
+            new_path='/{0}'.format('/'.join(path_parts[1:]).replace('//','/'))
             new_netloc='search.twitter.com'
         elif path_parts[2].startswith('search.json'):
             new_path=path
@@ -67,7 +67,7 @@ class MainPage(webapp2.RequestHandler):
             new_path=path
             new_netloc='api.twitter.com'
 
-        new_path=new_path.replace('/'+USER_PASSWORD+'/','/')
+        new_path=new_path.replace('/{0}/'.format(USER_PASSWORD),'/')
         new_url=urlparse.urlunparse(('https',new_netloc,new_path.replace('//','/'),params,query,''))
         return new_url,new_path
 
@@ -80,12 +80,12 @@ class MainPage(webapp2.RequestHandler):
         if new_path=='/' or new_path=='':
             self.response.set_status(200)
             self.response.headers['Content-Type']='text/html'
-            self.response.out.write(ptapp_message.replace('#request_path#',self.request.path))
+            self.response.out.write(ptapp_message.format(self.request.path))
             return 0
         
         user_access_token=None
         
-        callback_url='%s/oauth/verify'%self.request.host_url
+        callback_url='{0}/oauth/verify'.format(self.request.host_url)
         client=oauth.TwitterClient(CONSUMER_KEY,CONSUMER_SECRET,callback_url)
 
         protected=True
@@ -113,8 +113,9 @@ class MainPage(webapp2.RequestHandler):
                 self.response.headers['Content-Type']='application/json'
                 self.response.out.write('{"error":"Twitter / Over capacity"}')
             elif API_IMPROVE==1 and method=='GET' and new_path.endswith('.json') and data.status_code<400:
+                from linkrewriter import linkrewriter
                 self.response.headers['Content-Type']='application/json'
-                self.response.out.write(improve.api_improve(data.content))
+                self.response.out.write(linkrewriter(data.content))
             else: 
                 if new_path.endswith('.xml'):
                     self.response.headers['Content-Type']='application/xml'
@@ -132,18 +133,17 @@ class MainPage(webapp2.RequestHandler):
 class OAuthPage(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type']='text/plain'
-        self.response.out.write('oauth_token=%s&oauth_token_secret=%s&user_id=%s&screen_name=%s&x_auth_expires=0'
-                                %(ACCESS_TOKEN,
-                                  ACCESS_TOKEN_SECRET,
-                                  ACCESS_TOKEN.split('-')[0],
-                                  SCREEN_NAME))
+        self.response.out.write('oauth_token={0}&oauth_token_secret={1}&user_id={2}&screen_name={3}&x_auth_expires=0'.format(ACCESS_TOKEN,
+                                                                                                                             ACCESS_TOKEN_SECRET,
+                                                                                                                             ACCESS_TOKEN.split('-')[0],
+                                                                                                                             SCREEN_NAME))
 
 class DummyPage(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type']='text/html'
         self.response.set_status(404)
-        self.response.out.write(ptapp_message.replace('#request_path#',self.request.path))
+        self.response.out.write(ptapp_message.format(self.request.path))
 
-app=webapp2.WSGIApplication([('/'+USER_PASSWORD+'/oauth/access_token',OAuthPage),
-                             ('/'+USER_PASSWORD+'/.*',MainPage),
+app=webapp2.WSGIApplication([('/{0}/oauth/access_token'.format(USER_PASSWORD),OAuthPage),
+                             ('/{0}/.*'.format(USER_PASSWORD),MainPage),
                              ('/.*',DummyPage)],debug=True)
