@@ -1,5 +1,5 @@
 #coding: utf8
-# Project aria2-WIOW
+# Project PTAPP
 #
 # Copyright (c) 2012, multiSnow <infinity.blick.winkel@gmail.com>
 #

@@ -1,5 +1,5 @@
 #coding: utf8
-# Project aria2-WIOW
+# Project PTAPP
 #
 # Copyright (c) 2012, multiSnow <infinity.blick.winkel@gmail.com>
 #
@@ -17,9 +17,11 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-import urlparse,logging,webapp2
+import logging
+import webapp2
 from cgi import parse_qsl
-from google.appengine.api import urlfetch,urlfetch_errors
+from google.appengine.api import urlfetch
+from urlparse import urlparse,urlunparse
 import oauth
 
 CONSUMER_KEY=''
@@ -46,7 +48,7 @@ ptapp_message='''
 class MainPage(webapp2.RequestHandler):
 
     def conver_url(self,orig_url):
-        (scm,netloc,path,params,query,_)=urlparse.urlparse(orig_url)
+        (scm,netloc,path,params,query,_)=urlparse(orig_url)
         
         path_parts=path.split('/')
 
@@ -68,7 +70,7 @@ class MainPage(webapp2.RequestHandler):
             new_netloc='api.twitter.com'
 
         new_path=new_path.replace('/{0}/'.format(USER_PASSWORD),'/')
-        new_url=urlparse.urlunparse(('https',new_netloc,new_path.replace('//','/'),params,query,''))
+        new_url=urlunparse(('https',new_netloc,new_path.replace('//','/'),params,query,''))
         return new_url,new_path
 
     def do_proxy(self,method):
