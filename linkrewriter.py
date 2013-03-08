@@ -1,5 +1,12 @@
 #coding:utf-8
 
+before_dict=['img.ly/','twitpic.com/','google.com/']
+
+def https_wrap(url_in):
+    from urlparse import urlparse,urlunparse
+    (url_in_scm,url_in_netloc,url_in_path,url_in_params,url_in_query,url_in__)=urlparse(url_in)
+    return urlunparse(('https',url_in_netloc,url_in_path,url_in_params,url_in_query,url_in__))
+
 def func_reindices(text,string):
     #locate string in text
     #return [start,end]
@@ -9,6 +16,7 @@ def func_reindices(text,string):
 
 def func_replace_tco(text,entit_list):
     #replace t.co in text using urls from entit_list.
+    #NOTE: entit_list willl also be modified.
     #
     #url should as below at least:
     #url['url']==t.co_url
@@ -19,12 +27,17 @@ def func_replace_tco(text,entit_list):
     #
     #return [text,extit_list]
     for urls in entit_list:
+        if '/t.co/' not in urls['url']:
+            break
         url=urls['url']
         if 'media_url_https' in urls:
             expanded_url=urls['media_url_https']
             urls['expanded_url']=expanded_url
         else:
-            expanded_url=urls['expanded_url']
+            for url_before in before_dict:
+                if url_before in urls['expanded_url']:
+                    urls['expanded_url']=https_wrap(urls['expanded_url'])
+                expanded_url=urls['expanded_url']
         text=text.replace(url,expanded_url)
         urls['url']=expanded_url
         urls['display_url']=expanded_url
@@ -73,7 +86,7 @@ def func_url_rewrite(status_dict):
                         user['indices']=func_reindices(status_dict['text'],'@{0}'.format(user['screen_name']))
                 elif entities_child=='hashtags':
                     for user in status_dict['entities'][entities_child]:
-                        user['indices']=func_reindices(status_dict['text'],user['text'])
+                        user['indices']=func_reindices(status_dict['text'],'#{0}'.format(user['text']))
     finally:
         pass
 
@@ -82,12 +95,6 @@ def func_url_rewrite(status_dict):
 def func_write_dict(input_dict):
     input_dict=func_url_rewrite(input_dict)
     return 0
-
-def https_wrap(url_in):
-    (url_in_scm,url_in_netloc,url_in_path,url_in_params,url_in_query,url_in__)=urlparse.urlparse(url_in)
-    return urlparse.urlunparse(('https',url_in_netloc,url_in_path,url_in_params,url_in_query,url_in__))
-
-insecurl_dict=['img.ly','twitpic.com']
 
 def linkrewriter(content):
     import json
