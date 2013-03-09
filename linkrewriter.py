@@ -21,7 +21,7 @@ import json
 from threading import Thread
 from urlparse import urlparse,urlunparse
 
-TIMEOUT=5
+from config import EXP_SHORTURL,TIMEOUT
 
 before_dict=['img.ly/','twitpic.com/','google.com/']
 
@@ -41,25 +41,27 @@ def https_wrap(url_in):
     return urlunparse(('https',url_in_netloc,url_in_path,url_in_params,url_in_query,url_in__))
 
 def func_reindices(text,string):
-    #locate string in text
-    #return [start,end]
+    # locate string in text
+    # return [start,end]
+
     lowered_text=text.lower()
     start=lowered_text.find(string.lower())
     end=start+len(string)
     return [start,end]
 
 def func_replace_tco(text,entit_list):
-    #replace t.co in text using urls from entit_list.
-    #NOTE: entit_list willl also be modified.
-    #
-    #url should as below at least:
-    #url['url']==t.co_url
-    #url['expanded_url']==orig_url
-    #url['display_url']==url_to_display
-    #
-    #url['media_url_https'] will be tested and processed only when exist
-    #
-    #return [text,extit_list]
+    # replace t.co in text using urls from entit_list.
+    # NOTE: entit_list willl also be modified.
+    # 
+    # url should as below at least:
+    # url['url']==t.co_url
+    # url['expanded_url']==orig_url
+    # url['display_url']==url_to_display
+    # 
+    # url['media_url_https'] will be tested and processed only when exist
+    # 
+    # return [text,extit_list]
+
     for urls in entit_list:
         if '//t.co/' not in urls['url']:
             continue
@@ -68,7 +70,7 @@ def func_replace_tco(text,entit_list):
             urls['expanded_url']=expanded_url=urls['media_url_https']
         else:
             for url_short in short_dict:
-                if url_short in urls['expanded_url']:
+                if EXP_SHORTURL==1 and url_short in urls['expanded_url']:
                     from unshorten import exp_func_dict
                     [urls['expanded_url'],text]=exp_func_dict[url_short](urls['expanded_url'],text,url,TIMEOUT)
             for url_before in before_dict:
@@ -86,22 +88,19 @@ def func_url_rewrite(status_dict):
         if 'user' in status_dict:
             try:
                 status_dict['user'][entry]=status_dict['user'][entry.replace('image_url','image_url_https')]
-            finally:
+            except:
                 pass
 
     if 'user' in status_dict:
-        try:
-            if status_dict['user']['url']:
-                if '//t.co/' in status_dict['user']['url']:
-                    [status_dict['user']['url'],status_dict['user']['entities']['url']['urls']]=func_replace_tco(status_dict['user']['url'],status_dict['user']['entities']['url']['urls'])
-        finally:
-            pass
-
-    if 'user' in status_dict:
-        try:
-            [status_dict['user']['description'],status_dict['user']['entities']['description']['urls']]=func_replace_tco(status_dict['user']['description'],status_dict['user']['entities']['description']['urls'])
-        finally:
-            pass
+        if 'entities' in status_dict['user']:
+            for entry in ['url','description']:
+                try:
+                    if '//t.co/' in status_dict['user']['url']:
+                        [status_dict['user'][entry],status_dict['user']['entities'][entry]['urls']]=func_replace_tco(status_dict['user'][entry],status_dict['user']['entities'][entry]['urls'])
+                        for entities_entry in status_dict['user'][entry]:
+                            entities_entry['indices']=func_reindices(status_dict['user'][entry],entities_entry['url'])
+                except:
+                    pass
 
     if 'entities' in status_dict:
         for entities_child in status_dict['entities']:
@@ -117,8 +116,8 @@ def func_url_rewrite(status_dict):
                 for user in status_dict['entities'][entities_child]:
                     user['indices']=func_reindices(status_dict['text'],'@{0}'.format(user['screen_name']))
             elif entities_child=='hashtags':
-                for user in status_dict['entities'][entities_child]:
-                    user['indices']=func_reindices(status_dict['text'],u'#{0}'.format(user['text']))
+                for hashtag in status_dict['entities'][entities_child]:
+                    hashtag['indices']=func_reindices(status_dict['text'],u'#{0}'.format(hashtag['text']))
 
     return status_dict
 
@@ -130,24 +129,24 @@ def linkrewriter(content):
     try:
         status_list=json.loads(content);
         if type(status_list)==list:
-            mts=[]
-            for p in status_list:
-                mt=Thread(target=func_write_dict,args=(p,))
+            thread_list=[]
+            for status in status_list:
+                mt=Thread(target=func_write_dict,args=(status,))
                 mt.start()
-                mts.append(mt)
-                if 'retweeted_status' in p:
-                    q=p['retweeted_status']
-                    nt=Thread(target=func_write_dict,args=(q,))
+                thread_list.append(mt)
+                if 'retweeted_status' in status:
+                    nt=Thread(target=func_write_dict,args=(status['retweeted_status'],))
                     nt.start()
-                    mts.append(nt)
+                    thread_list.append(nt)
 
-            for t in mts:
-                t.join()
-
+            for threads in thread_list:
+                threads.join()
+            return json.dumps(status_list)
         elif type(status_list)==dict:
             func_write_dict(status_list)
+            return json.dumps(status_list)
         else:
-            pass
+            return content
 
-    finally:
-        return json.dumps(status_list)
+    except:
+        return content

@@ -17,22 +17,14 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-import logging
 import webapp2
+from logging import debug
 from cgi import parse_qsl
 from google.appengine.api import urlfetch
 from urlparse import urlparse,urlunparse
-import oauth
+from oauth import TwitterClient
 
-CONSUMER_KEY=''
-CONSUMER_SECRET=''
-
-SCREEN_NAME=''
-USER_PASSWORD=''
-ACCESS_TOKEN=''
-ACCESS_TOKEN_SECRET=''
-
-API_IMPROVE=1
+from config import CONSUMER_KEY,CONSUMER_SECRET,SCREEN_NAME,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,USER_PASSWORD,API_IMPROVE
 
 ptapp_message='''
 <html><head>
@@ -82,13 +74,13 @@ class MainPage(webapp2.RequestHandler):
         if new_path=='/' or new_path=='':
             self.response.set_status(200)
             self.response.headers['Content-Type']='text/html'
-            self.response.out.write(ptapp_message.format(self.request.path))
+            self.response.write(ptapp_message.format(self.request.path))
             return 0
         
         user_access_token=None
         
         callback_url='{0}/oauth/verify'.format(self.request.host_url)
-        client=oauth.TwitterClient(CONSUMER_KEY,CONSUMER_SECRET,callback_url)
+        client=TwitterClient(CONSUMER_KEY,CONSUMER_SECRET,callback_url)
 
         protected=True
         user_access_token,user_access_secret=ACCESS_TOKEN,ACCESS_TOKEN_SECRET
@@ -105,25 +97,31 @@ class MainPage(webapp2.RequestHandler):
                                      protected=protected,
                                      additional_params=additional_params)
         except Exception,error_message:
-            logging.debug(error_message)
+            debug(error_message)
             self.response.set_status(503)
-            self.response.headers['Content-Type']='text/html'
-            self.response.out.write('Server Error:<br/>')
-            self.response.out.write(error_message)
+            self.response.headers['Content-Type']='application/json'
+            self.response.write('{"error":"{0}"}'.format(error_message))
+            self.response.write(error_message)
         else:
             if data.status_code>=500:
                 self.response.headers['Content-Type']='application/json'
-                self.response.out.write('{"error":"Twitter / Over capacity"}')
-            elif API_IMPROVE==1 and method=='GET' and new_path.endswith('.json') and data.status_code<400:
-                from linkrewriter import linkrewriter
+                self.response.write('{"error":"Twitter / Over capacity"}')
+            elif data.status_code>=400:
                 self.response.headers['Content-Type']='application/json'
-                self.response.out.write(linkrewriter(data.content))
+                self.response.write(data.content)
+            elif API_IMPROVE==1 and method=='GET' and new_path.endswith('.json'):
+                debug('!!!Rewriter Start!!!')
+                from linkrewriter import linkrewriter
+                rewrited_status=linkrewriter(data.content)
+                debug('!!!Rewrite Finished!!!')
+                self.response.headers['Content-Type']='application/json'
+                self.response.write(rewrited_status)
             else: 
                 if new_path.endswith('.xml'):
                     self.response.headers['Content-Type']='application/xml'
-                else:
+                elif new_path.endswith('.json'):
                     self.response.headers['Content-Type']='application/json'
-                self.response.out.write(data.content)
+                self.response.write(data.content)
         return 0
 
     def post(self):
@@ -135,7 +133,7 @@ class MainPage(webapp2.RequestHandler):
 class OAuthPage(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type']='text/plain'
-        self.response.out.write('oauth_token={0}&oauth_token_secret={1}&user_id={2}&screen_name={3}&x_auth_expires=0'.format(ACCESS_TOKEN,
+        self.response.write('oauth_token={0}&oauth_token_secret={1}&user_id={2}&screen_name={3}&x_auth_expires=0'.format(ACCESS_TOKEN,
                                                                                                                              ACCESS_TOKEN_SECRET,
                                                                                                                              ACCESS_TOKEN.split('-')[0],
                                                                                                                              SCREEN_NAME))
@@ -144,7 +142,7 @@ class DummyPage(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type']='text/html'
         self.response.set_status(404)
-        self.response.out.write(ptapp_message.format(self.request.path))
+        self.response.write(ptapp_message.format(self.request.path))
 
 app=webapp2.WSGIApplication([('/{0}/oauth/access_token'.format(USER_PASSWORD),OAuthPage),
                              ('/{0}/.*'.format(USER_PASSWORD),MainPage),
