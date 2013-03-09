@@ -16,7 +16,6 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-
 application: appid
 version: 1
 runtime: python27
@@ -25,6 +24,9 @@ threadsafe: true
 
 libraries:
 - name: pycrypto
+  version: latest
+
+- name: lxml
   version: latest
 
 handlers:
