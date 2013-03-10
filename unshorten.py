@@ -27,7 +27,7 @@ from config import BITLY_LOGIN,BITLY_APIKEY
 
 def geturl(url,method,timeout):
     def fetch_to_dict(dict_in):
-        respond=fetch(dict_in['url'],method=dict_in['method'],deadline=dict_in['timeout'])
+        respond=fetch(dict_in['url'],method=dict_in['method'])
         dict_in['text']=respond.content
         return 0
 
