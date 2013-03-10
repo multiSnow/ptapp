@@ -18,6 +18,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 import json
+from logging import debug
 from threading import Thread
 from urlparse import urlparse,urlunparse
 
@@ -89,6 +90,7 @@ def func_url_rewrite(status_dict):
             try:
                 status_dict['user'][entry]=status_dict['user'][entry.replace('image_url','image_url_https')]
             except:
+                debug('Error in force https profile image.')
                 pass
 
     if 'user' in status_dict:
@@ -100,6 +102,7 @@ def func_url_rewrite(status_dict):
                         for entities_entry in status_dict['user'][entry]:
                             entities_entry['indices']=func_reindices(status_dict['user'][entry],entities_entry['url'])
                 except:
+                    debug('Error in expand t.co in user dict.')
                     pass
 
     if 'entities' in status_dict:
@@ -149,4 +152,5 @@ def linkrewriter(content):
             return content
 
     except:
+        debug('Twitter respond a non-json string.')
         return content

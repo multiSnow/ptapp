@@ -98,10 +98,10 @@ class MainPage(webapp2.RequestHandler):
                                      additional_params=additional_params)
         except Exception,error_message:
             debug(error_message)
+            from json import dumps
             self.response.set_status(503)
             self.response.headers['Content-Type']='application/json'
-            self.response.write('{"error":"{0}"}'.format(error_message))
-            self.response.write(error_message)
+            self.response.write(dumps(dict(error=str(error_message))))
         else:
             if data.status_code>=500:
                 self.response.headers['Content-Type']='application/json'
@@ -116,6 +116,7 @@ class MainPage(webapp2.RequestHandler):
                 debug('!!!Rewrite Finished!!!')
                 self.response.headers['Content-Type']='application/json'
                 self.response.write(rewrited_status)
+                debug('!!!Message Sent!!!')
             else: 
                 if new_path.endswith('.xml'):
                     self.response.headers['Content-Type']='application/xml'
