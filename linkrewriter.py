@@ -102,7 +102,6 @@ def func_url_rewrite(status_dict):
                         for entities_entry in status_dict['user'][entry]:
                             entities_entry['indices']=func_reindices(status_dict['user'][entry],entities_entry['url'])
                 except:
-                    debug('Error in expand t.co in user dict.')
                     pass
 
     if 'entities' in status_dict:
