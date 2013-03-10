@@ -90,6 +90,7 @@ class MainPage(webapp2.RequestHandler):
         use_method=urlfetch.GET if method=='GET' else urlfetch.POST
 
         try:
+            debug('!!!Start communicate to twitter!!!')
             data=client.make_request(url=new_url,
                                      token=user_access_token,
                                      secret=user_access_secret,
@@ -110,7 +111,7 @@ class MainPage(webapp2.RequestHandler):
                 self.response.headers['Content-Type']='application/json'
                 self.response.write(data.content)
             elif API_IMPROVE==1 and method=='GET' and new_path.endswith('.json'):
-                debug('!!!Rewriter Start!!!')
+                debug('!!!Status received, rewriter start!!!')
                 from linkrewriter import linkrewriter
                 rewrited_status=linkrewriter(data.content)
                 debug('!!!Rewrite Finished!!!')
@@ -122,6 +123,7 @@ class MainPage(webapp2.RequestHandler):
                     self.response.headers['Content-Type']='application/xml'
                 elif new_path.endswith('.json'):
                     self.response.headers['Content-Type']='application/json'
+                debug('!!!Status received, do nothing!!!')
                 self.response.write(data.content)
         return 0
 
