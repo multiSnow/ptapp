@@ -22,7 +22,7 @@ from logging import debug
 from threading import Thread
 from urlparse import urlparse,urlunparse
 
-from config import EXP_SHORTURL,TIMEOUT
+from config import EXP_SHORTURL
 
 before_dict=['img.ly/','twitpic.com/','google.com/']
 
@@ -31,6 +31,7 @@ short_dict=['/4sq.com/',
             '/bitly.com/',
             '/buff.ly/',
             '/goo.gl/',
+            '/img.ly/',
             '/instagr.am/',
             '/is.gd/',
             '/j.mp/',
@@ -73,7 +74,7 @@ def func_replace_tco(text,entit_list):
             for url_short in short_dict:
                 if EXP_SHORTURL==1 and url_short in urls['expanded_url']:
                     from unshorten import exp_func_dict
-                    [urls['expanded_url'],text]=exp_func_dict[url_short](urls['expanded_url'],text,url,TIMEOUT)
+                    [urls['expanded_url'],text]=exp_func_dict[url_short](urls['expanded_url'],text,url)
             for url_before in before_dict:
                 if url_before in urls['expanded_url']:
                     urls['expanded_url']=https_wrap(urls['expanded_url'])
