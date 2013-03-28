@@ -18,7 +18,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 import json
-from logging import debug
+from logging import info
 from threading import Thread
 from urlparse import urlparse,urlunparse
 from google.appengine.api.urlfetch import fetch
@@ -37,7 +37,7 @@ def geturl(url):
     mt.start()
     mt.join(TIMEOUT)
     if mt.isAlive():
-        debug('Timeout in require {0}'.format(urlparse(url).netloc))
+        info('Timeout in require {0}'.format(urlparse(url).netloc))
     return dict_req['text']
 
 def getloc(url):
@@ -52,7 +52,7 @@ def getloc(url):
     mt.start()
     mt.join(TIMEOUT)
     if mt.isAlive():
-        debug('Timeout in require {0}'.format(urlparse(url).netloc))
+        info('Timeout in require {0}'.format(urlparse(url).netloc))
     return dict_req['text']
 
 def exp_bitly(url_in,text,url_replace):

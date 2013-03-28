@@ -18,7 +18,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 import json
-from logging import debug
+from logging import info
 from threading import Thread
 from urlparse import urlparse,urlunparse
 
@@ -92,7 +92,7 @@ def func_url_rewrite(status_dict):
             try:
                 status_dict['user'][entry]=status_dict['user'][entry.replace('image_url','image_url_https')]
             except:
-                debug('Error in force https profile image.')
+                info('Error in force https profile image.')
                 pass
 
     if 'user' in status_dict:
@@ -153,5 +153,5 @@ def linkrewriter(content):
             return content
 
     except:
-        debug('Twitter respond a non-json string.')
+        info('Twitter respond a non-json string.')
         return content
