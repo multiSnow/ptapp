@@ -68,9 +68,9 @@ class AuthTokenModel(db.Model):
         self.secret=EncodeAES(self.create_aes(self_key),self.secret)
 
     def decrypt(self,self_key):
-        logging.debug('xx_token:{0}'.format(self.token))
+        debug('xx_token:{0}'.format(self.token))
         self.token =DecodeAES(self.create_aes(self_key),self.token)
-        logging.debug('yy_token:{0}'.format(self.token))
+        debug('yy_token:{0}'.format(self.token))
         self.secret=DecodeAES(self.create_aes(self_key),self.secret)
 
 class OAuthClient():
@@ -165,12 +165,12 @@ class OAuthClient():
         data=self.make_async_request(url,token,secret,additional_params,protected,method).get_result()
 
         if data.status_code!=200:
-            logging.debug(data.status_code)
-            logging.debug(url)
-            logging.debug(token)
-            logging.debug(secret)
-            logging.debug(additional_params)
-            logging.debug(data.content)
+            debug(data.status_code)
+            debug(url)
+            debug(token)
+            debug(secret)
+            debug(additional_params)
+            debug(data.content)
         return data
 
     def get_authorization_url(self):
@@ -266,8 +266,8 @@ class OAuthClient():
             screen_name=parsed_results['screen_name'][0]
 
         if not (token and secret) or result.status_code != 200:
-            logging.error('Response Status Code is :{0}'.format(result.status_code))
-            logging.error('Could not extract token/secret:{0}'.format(result.content))
+            error('Response Status Code is :{0}'.format(result.status_code))
+            error('Could not extract token/secret:{0}'.format(result.content))
             raise OAuthException('Problem talking to the service')
 
         return {'service':self.service_name,
