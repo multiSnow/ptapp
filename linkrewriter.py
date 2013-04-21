@@ -121,7 +121,7 @@ def func_url_rewrite(status_dict):
                     user['indices']=func_reindices(status_dict['text'],'@{0}'.format(user['screen_name']))
             elif entities_child=='hashtags':
                 for hashtag in status_dict['entities'][entities_child]:
-                    hashtag['indices']=func_reindices(status_dict['text'],u'#{0}'.format(hashtag['text']))
+                    hashtag['indices']=func_reindices(status_dict['text'],u'#{0}'.format(hashtag['text'])) if u'#{0}'.format(hashtag['text']) in status_dict['text'] else func_reindices(status_dict['text'],u'＃{0}'.format(hashtag['text']))
 
     return status_dict
 
