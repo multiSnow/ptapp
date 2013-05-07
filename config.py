@@ -33,3 +33,10 @@ BITLY_APIKEY=''
 
 API_IMPROVE=1
 EXP_SHORTURL=0
+FILTER=0
+
+FILTER_source=''
+FILTER_screen_name=''
+FILTER_url=''
+FILTER_hashtag=''
+FILTER_text=''

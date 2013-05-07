@@ -24,7 +24,7 @@ from google.appengine.api import urlfetch
 from urlparse import urlparse,urlunparse
 from oauth import TwitterClient
 
-from config import CONSUMER_KEY,CONSUMER_SECRET,SCREEN_NAME,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,USER_PASSWORD,API_IMPROVE
+from config import CONSUMER_KEY,CONSUMER_SECRET,SCREEN_NAME,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,USER_PASSWORD,API_IMPROVE,FILTER
 
 ptapp_message='''
 <html><head>
@@ -110,21 +110,27 @@ class MainPage(webapp2.RequestHandler):
             elif data.status_code>=400:
                 self.response.headers['Content-Type']='application/json'
                 self.response.write(data.content)
-            elif API_IMPROVE==1 and method=='GET' and new_path.endswith('.json'):
-                debug('!!!Status received, rewriter start!!!')
-                from linkrewriter import linkrewriter
-                rewrited_status=linkrewriter(data.content)
-                debug('!!!Rewrite Finished!!!')
-                self.response.headers['Content-Type']='application/json'
-                self.response.write(rewrited_status)
-                debug('!!!Message Sent!!!')
-            else: 
+            else:
                 if new_path.endswith('.xml'):
                     self.response.headers['Content-Type']='application/xml'
+                    self.response.write(data.content)
                 elif new_path.endswith('.json'):
+                    status=data.content
+                    if method=='GET':
+                        if FILTER==1:
+                            debug('Filter start.')
+                            from statusfilter import statusfilter
+                            status=statusfilter(status)
+                            debug('Filter finished')
+                        if API_IMPROVE==1:
+                            debug('Rewriter start.')
+                            from linkrewriter import linkrewriter
+                            status=linkrewriter(status)
+                            debug('Rewrite Finished.')
                     self.response.headers['Content-Type']='application/json'
-                debug('!!!Status received, do nothing!!!')
-                self.response.write(data.content)
+                    self.response.write(status)
+                else:
+                    self.response.write(data.content)
         return 0
 
     def post(self):
