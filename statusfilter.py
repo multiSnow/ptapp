@@ -17,7 +17,7 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-import json
+from json import dumps,loads
 from logging import debug,info
 from re import IGNORECASE,search
 
@@ -130,7 +130,7 @@ def checkfilter(input_dict):
 
 def statusfilter(content):
     try:
-        status=json.loads(content);
+        status=loads(content);
         if type(status)==list:
             i=0
             while i<len(status):
@@ -138,7 +138,7 @@ def statusfilter(content):
                     status.pop(i)
                 else:
                     i+=1
-            return json.dumps(status)
+            return dumps(status)
         else:
             return content
     except:

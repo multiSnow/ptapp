@@ -17,7 +17,7 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-import json
+from json import dumps,loads
 from logging import info
 from threading import Thread
 from urlparse import urlparse,urlunparse
@@ -131,7 +131,7 @@ def func_write_dict(input_dict):
 
 def linkrewriter(content):
     try:
-        status_list=json.loads(content);
+        status_list=loads(content);
         if type(status_list)==list:
             thread_list=[]
             for status in status_list:
@@ -145,10 +145,10 @@ def linkrewriter(content):
 
             for threads in thread_list:
                 threads.join()
-            return json.dumps(status_list)
+            return dumps(status_list)
         elif type(status_list)==dict:
             func_write_dict(status_list)
-            return json.dumps(status_list)
+            return dumps(status_list)
         else:
             return content
 

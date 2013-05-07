@@ -17,7 +17,7 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-import json
+from json import loads
 from logging import info
 from threading import Thread
 from urlparse import urlparse,urlunparse
@@ -61,7 +61,7 @@ def exp_bitly(url_in,text,url_replace):
     bitly_query='login={0}&apiKey={1}&shortUrl={2}'.format(BITLY_LOGIN,BITLY_APIKEY,url_in)
     bitly_respond=geturl(urlunparse(('https',bitly_netloc,bitly_path,'',bitly_query,'')))
     if bitly_respond:
-        url_in=json.loads(bitly_respond)['data']['expand'][0]['long_url']
+        url_in=loads(bitly_respond)['data']['expand'][0]['long_url']
     return [url_in,text]
 
 def exp_googl(url_in,text,url_replace):
@@ -70,7 +70,7 @@ def exp_googl(url_in,text,url_replace):
     googl_query='shortUrl={0}'.format(url_in)
     googl_respond=geturl(urlunparse(('https',googl_netloc,googl_path,'',googl_query,'')))
     if googl_respond:
-        url_in=json.loads(googl_respond)['longUrl']
+        url_in=loads(googl_respond)['longUrl']
     return [url_in,text]
 
 def exp_isgd(url_in,text,url_replace):
@@ -79,7 +79,7 @@ def exp_isgd(url_in,text,url_replace):
     isgd_query='shorturl={0}&format=json'.format(url_in)
     isgd_respond=geturl(urlunparse(('http',isgd_netloc,isgd_path,'',isgd_query,'')))
     if isgd_respond:
-        url_in=json.loads(isgd_respond)['url']
+        url_in=loads(isgd_respond)['url']
     return [url_in,text]
 
 def exp_instaragm(url_in,text,url_replace):
@@ -88,7 +88,7 @@ def exp_instaragm(url_in,text,url_replace):
     instaragm_query='url={0}'.format(url_in)
     instaragm_respond=geturl(urlunparse(('https',instaragm_netloc,instaragm_path,'',instaragm_query,'')))
     if instaragm_respond:
-        url_in=json.loads(instaragm_respond)['url']
+        url_in=loads(instaragm_respond)['url']
     return [url_in,text]
 
 def exp_tldg(url_in,text,url_replace):

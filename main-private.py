@@ -17,7 +17,7 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-import webapp2
+from webapp2 import RequestHandler,WSGIApplication
 from logging import debug
 from cgi import parse_qsl
 from google.appengine.api import urlfetch
@@ -37,7 +37,7 @@ ptapp_message='''
 <h2></h2>
 </body></html>'''
 
-class MainPage(webapp2.RequestHandler):
+class MainPage(RequestHandler):
 
     def conver_url(self,orig_url):
         (scm,netloc,path,params,query,_)=urlparse(orig_url)
@@ -139,7 +139,7 @@ class MainPage(webapp2.RequestHandler):
     def get(self):
         self.do_proxy('GET')
 
-class OAuthPage(webapp2.RequestHandler):
+class OAuthPage(RequestHandler):
     def get(self):
         self.response.headers['Content-Type']='text/plain'
         self.response.write('oauth_token={0}&oauth_token_secret={1}&user_id={2}&screen_name={3}&x_auth_expires=0'.format(ACCESS_TOKEN,
@@ -147,12 +147,12 @@ class OAuthPage(webapp2.RequestHandler):
                                                                                                                              ACCESS_TOKEN.split('-')[0],
                                                                                                                              SCREEN_NAME))
 
-class DummyPage(webapp2.RequestHandler):
+class DummyPage(RequestHandler):
     def get(self):
         self.response.headers['Content-Type']='text/html'
         self.response.set_status(404)
         self.response.write(ptapp_message.format(self.request.path))
 
-app=webapp2.WSGIApplication([('/{0}/oauth/access_token'.format(USER_PASSWORD),OAuthPage),
-                             ('/{0}/.*'.format(USER_PASSWORD),MainPage),
-                             ('/.*',DummyPage)],debug=True)
+app=WSGIApplication([('/{0}/oauth/access_token'.format(USER_PASSWORD),OAuthPage),
+                     ('/{0}/.*'.format(USER_PASSWORD),MainPage),
+                     ('/.*',DummyPage)],debug=True)
