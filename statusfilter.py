@@ -37,12 +37,12 @@ def check_source(input_dict):
     if 'retweeted_status' in input_dict:
         if 'source' in input_dict['retweeted_status']:
             if search(regexp_dict['source'],input_dict['retweeted_status']['source'],IGNORECASE):
-                debug('Filtered source: {0}'.format(input_dict['retweeted_status']['source']))
+                debug(u'Filtered source: {0}'.format(input_dict['retweeted_status']['source']))
                 return 1
     else:
         if 'source' in input_dict:
             if search(regexp_dict['source'],input_dict['source'],IGNORECASE):
-                debug('Filtered source: {0}'.format(input_dict['source']))
+                debug(u'Filtered source: {0}'.format(input_dict['source']))
                 return 1
     return 0
 
@@ -54,12 +54,12 @@ def check_screen_name(input_dict):
     if 'retweeted_status' in input_dict:
         if 'user' in input_dict['retweeted_status']:
             if search(regexp_dict['screen_name'],input_dict['retweeted_status']['user']['screen_name'],IGNORECASE):
-                debug('Filtered source: {0}'.format(input_dict['retweeted_status']['user']['screen_name']))
+                debug(u'Filtered source: {0}'.format(input_dict['retweeted_status']['user']['screen_name']))
                 return 1
     else:
         if 'user' in input_dict:
             if search(regexp_dict['screen_name'],input_dict['user']['screen_name'],IGNORECASE):
-                debug('Filtered source: {0}'.format(input_dict['user']['screen_name']))
+                debug(u'Filtered source: {0}'.format(input_dict['user']['screen_name']))
                 return 1
     return 0
 
@@ -72,13 +72,13 @@ def check_url(input_dict):
         if 'entities' in input_dict['retweeted_status']:
             for url in input_dict['retweeted_status']['entities']['urls']:
                 if search(regexp_dict['url'],url['expanded_url'],IGNORECASE):
-                    debug('Filtered url: {0}'.format(url['expanded_url']))
+                    debug(u'Filtered url: {0}'.format(url['expanded_url']))
                     return 1
     else:
         if 'entities' in input_dict:
             for url in input_dict['entities']['urls']:
                 if search(regexp_dict['url'],url['expanded_url'],IGNORECASE):
-                    debug('Filtered url: {0}'.format(url['expanded_url']))
+                    debug(u'Filtered url: {0}'.format(url['expanded_url']))
                     return 1
     return 0
 
@@ -91,13 +91,13 @@ def check_hashtag(input_dict):
         if 'entities' in input_dict['retweeted_status']:
             for hashtag in input_dict['retweeted_status']['entities']['hashtags']:
                 if search(regexp_dict['hashtag'],hashtag['text'],IGNORECASE):
-                    debug('Filtered hashtag: {0}'.format(hashtag['text']))
+                    debug(u'Filtered hashtag: {0}'.format(hashtag['text']))
                     return 1
     else:
         if 'entities' in input_dict:
             for hashtag in input_dict['entities']['hashtags']:
                 if search(regexp_dict['hashtag'],hashtag['text'],IGNORECASE):
-                    debug('Filtered hashtag: {0}'.format(hashtag['text']))
+                    debug(u'Filtered hashtag: {0}'.format(hashtag['text']))
                     return 1
     return 0
 
@@ -110,14 +110,14 @@ def check_text(input_dict):
         # only check text in retweeted_status if exists
         if 'text' in input_dict['retweeted_status']:
             if search(regexp_dict['text'],input_dict['retweeted_status']['text'],IGNORECASE):
-                debug('Filtered text: {0}'.format(input_dict['retweeted_status']['text']))
+                debug(u'Filtered text: {0}'.format(input_dict['retweeted_status']['text']))
                 return 1
             else:
                 return 0
     else:
         if 'text' in input_dict:
             if search(regexp_dict['text'],input_dict['text'],IGNORECASE):
-                debug('Filtered text: {0}'.format(input_dict['text']))
+                debug(u'Filtered text: {0}'.format(input_dict['text']))
                 return 1
     return 0
 
