@@ -90,7 +90,7 @@ class MainPage(webapp2.RequestHandler):
         use_method=urlfetch.GET if method=='GET' else urlfetch.POST
 
         try:
-            debug('!!!Start communicate to twitter!!!')
+            debug('Start communicate to twitter.')
             data=client.make_request(url=new_url,
                                      token=user_access_token,
                                      secret=user_access_secret,
