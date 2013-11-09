@@ -19,9 +19,8 @@
 
 from webapp2 import RequestHandler,WSGIApplication
 from logging import debug
-from cgi import parse_qsl
 from google.appengine.api import urlfetch
-from urlparse import urlparse,urlunparse
+from urlparse import urlparse,urlunparse,parse_qsl
 from oauth import TwitterClient
 
 from config import CONSUMER_KEY,CONSUMER_SECRET,SCREEN_NAME,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,USER_PASSWORD,API_IMPROVE,FILTER

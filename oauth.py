@@ -20,13 +20,12 @@
 from google.appengine.api import urlfetch,urlfetch_errors
 from google.appengine.ext import db
 
-from cgi import parse_qs,parse_qsl
 from hashlib import sha1,sha256,sha512
 from hmac import new as hmac
 from random import getrandbits
 from time import time
 from urllib import urlencode,quote as urlquote,unquote as urlunquote
-from urlparse import urlparse,urlunparse
+from urlparse import urlparse,urlunparse,parse_qs,parse_qsl
 from logging import debug,error
 from base64 import b64decode,b64encode
 from Crypto.Cipher import AES
