@@ -47,8 +47,13 @@ def func_reindices(text,string):
     # locate string in text
     # return [start,end]
 
+    fallback_dict={u'@{0}':u'＠{0}',
+                   u'#{0}':u'＃{0}'}
     lowered_text=text.lower()
-    start=lowered_text.find(string.lower())
+    try:
+        start=lowered_text.index(string.lower())
+    except ValueError:
+        start=lowered_text.index(u'{0}{1}'.format(fallback_dict[string[0]],string.lower()[1:]))
     end=start+len(string)
     return [start,end]
 
@@ -118,10 +123,10 @@ def func_url_rewrite(status_dict):
                     urls['indices']=func_reindices(status_dict['text'],urls['url'])
             elif entities_child=='user_mentions':
                 for user in status_dict['entities'][entities_child]:
-                    user['indices']=func_reindices(status_dict['text'],'@{0}'.format(user['screen_name']))
+                    user['indices']=func_reindices(status_dict['text'],u'@{0}'.format(user['screen_name']))
             elif entities_child=='hashtags':
                 for hashtag in status_dict['entities'][entities_child]:
-                    hashtag['indices']=func_reindices(status_dict['text'],u'#{0}'.format(hashtag['text'])) if u'#{0}'.format(hashtag['text']) in status_dict['text'] else func_reindices(status_dict['text'],u'＃{0}'.format(hashtag['text']))
+                    hashtag['indices']=func_reindices(status_dict['text'],u'#{0}'.format(hashtag['text']))
 
     return status_dict
 
