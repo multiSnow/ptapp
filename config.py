@@ -40,3 +40,7 @@ FILTER_screen_name=''
 FILTER_url=''
 FILTER_hashtag=''
 FILTER_text=''
+
+DOMAIN_TO_HTTPS=[]
+
+UNWANTED_QUERY_KEYS=[]

@@ -19,6 +19,7 @@
 
 from json import loads
 from logging import info
+from urllib import urlencode
 from urlparse import urlparse,urlunparse
 from google.appengine.api.urlfetch import fetch
 
@@ -41,9 +42,12 @@ def getloc(url):
         return None
 
 def exp_bitly(url_in,text,url_replace):
+    if not (BITLY_LOGIN and BITLY_APIKEY):
+        info('no BITLY_LOGIN and BITLY_APIKEY, do nothing')
+        return [url_in,text]
     bitly_netloc='api-ssl.bitly.com'
     bitly_path='/v3/expand'
-    bitly_query='login={0}&apiKey={1}&shortUrl={2}'.format(BITLY_LOGIN,BITLY_APIKEY,url_in)
+    bitly_query=urlencode([('login',BITLY_LOGIN),('apiKey',BITLY_APIKEY),('shortUrl',url_in)])
     bitly_respond=geturl(urlunparse(('https',bitly_netloc,bitly_path,'',bitly_query,'')))
     if bitly_respond:
         try:
@@ -55,7 +59,7 @@ def exp_bitly(url_in,text,url_replace):
 def exp_googl(url_in,text,url_replace):
     googl_netloc='www.googleapis.com'
     googl_path='/urlshortener/v1/url'
-    googl_query='shortUrl={0}'.format(url_in)
+    googl_query=urlencode([('shortUrl',url_in)])
     googl_respond=geturl(urlunparse(('https',googl_netloc,googl_path,'',googl_query,'')))
     if googl_respond:
         try:
@@ -67,7 +71,7 @@ def exp_googl(url_in,text,url_replace):
 def exp_isgd(url_in,text,url_replace):
     isgd_netloc='is.gd'
     isgd_path='/forward.php'
-    isgd_query='shorturl={0}&format=json'.format(url_in)
+    isgd_query=urlencode([('shorturl',url_in),('format','json')])
     isgd_respond=geturl(urlunparse(('http',isgd_netloc,isgd_path,'',isgd_query,'')))
     if isgd_respond:
         try:
@@ -89,10 +93,16 @@ def exp_instaragm(url_in,text,url_replace):
     return [url_in,text]
 
 def exp_tldg(url_in,text,url_replace):
-    url_id=''
-    for string in urlparse(url_in).path.split('/'):
-        if string!='' and string!='show':
-            url_id=string
+    p=urlparse(url_in)
+    try:
+        if p.hostname=='www.twitlonger.com':
+            url_id=p.path.split('/')[2] if p.path.startswith('/show/') else None
+        elif p.hostname=='tl.gd':
+            url_id=p.path.split('/')[1]
+        else:
+            url_id=None
+    except:
+        url_id=None
     if not url_id:
         return [url_in,text]
 
@@ -124,15 +134,15 @@ def exp_imgly(url_in,text,url_replace):
         url_in=imgly_respond
     return [url_in,text]
 
-exp_func_dict={'/4sq.com/':exp_bitly,
-               '/bit.ly/':exp_bitly,
-               '/bitly.com/':exp_bitly,
-               '/buff.ly/':exp_bitly,
-               '/goo.gl/':exp_googl,
-               '/img.ly/':exp_imgly,
-               '/instagr.am/':exp_instaragm,
-               '/instagram.com/':exp_instaragm,
-               '/is.gd/':exp_isgd,
-               '/j.mp/':exp_bitly,
-               '/tl.gd/':exp_tldg,
-               '/www.twitlonger.com/show/':exp_tldg}
+exp_func_dict={'4sq.com':exp_bitly,
+               'bit.ly':exp_bitly,
+               'bitly.com':exp_bitly,
+               'buff.ly':exp_bitly,
+               'goo.gl':exp_googl,
+               'img.ly':exp_imgly,
+               'instagr.am':exp_instaragm,
+               'instagram.com':exp_instaragm,
+               'is.gd':exp_isgd,
+               'j.mp':exp_bitly,
+               'tl.gd':exp_tldg,
+               'www.twitlonger.com':exp_tldg}

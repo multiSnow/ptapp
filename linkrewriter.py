@@ -20,28 +20,28 @@
 from json import dumps,loads
 from logging import info
 from threading import Thread
-from urlparse import urlparse,urlunparse
+from urllib import urlencode
+from urlparse import urlparse,urlunparse,parse_qsl
 
-from config import EXP_SHORTURL
+from config import DOMAIN_TO_HTTPS,EXP_SHORTURL,UNWANTED_QUERY_KEYS
+if EXP_SHORTURL==1:
+    from unshorten import exp_func_dict
+else:
+    exp_func_dict=dict()
 
-before_dict=['img.ly/','twitpic.com/','google.com/']
-
-short_dict=['/4sq.com/',
-            '/bit.ly/',
-            '/bitly.com/',
-            '/buff.ly/',
-            '/goo.gl/',
-            '/img.ly/',
-            '/instagr.am/',
-            '/instagram.com/',
-            '/is.gd/',
-            '/j.mp/',
-            '/tl.gd/',
-            '/www.twitlonger.com/show/']
-
-def https_wrap(url_in):
-    (url_in_scm,url_in_netloc,url_in_path,url_in_params,url_in_query,url_in__)=urlparse(url_in)
-    return urlunparse(('https',url_in_netloc,url_in_path,url_in_params,url_in_query,url_in__))
+def urlpp(url_in):
+    (url_in_scm,url_in_netloc,url_in_path,url_in_params,url_in_query,url_in_fragment)=urlparse(url_in)
+    for host in DOMAIN_TO_HTTPS:
+        if url_in_netloc.lower().endswith(host):
+            url_in_scm='https'
+            break
+    newquery_list=[]
+    for k,v in parse_qsl(url_in_query):
+        if k in UNWANTED_QUERY_KEYS:
+            info('remove {0} from {1}'.format(urlencode([(k,v)]),url_in))
+        else:
+            newquery_list.append((k,v))
+    return urlunparse((url_in_scm,url_in_netloc,url_in_path,url_in_params,urlencode(newquery_list),url_in_fragment))
 
 def func_reindices(text,string):
     # locate string in text
@@ -71,19 +71,15 @@ def func_replace_tco(text,entit_list):
     # return [text,extit_list]
 
     for urls in entit_list:
-        if '//t.co/' not in urls['url']:
+        if urlparse(urls['url']).hostname!='t.co':
             continue
         url=urls['url']
         if 'media_url_https' in urls:
             urls['expanded_url']=expanded_url=urls['media_url_https']
         else:
-            for url_short in short_dict:
-                if EXP_SHORTURL==1 and url_short in urls['expanded_url']:
-                    from unshorten import exp_func_dict
-                    [urls['expanded_url'],text]=exp_func_dict[url_short](urls['expanded_url'],text,url)
-            for url_before in before_dict:
-                if url_before in urls['expanded_url']:
-                    urls['expanded_url']=https_wrap(urls['expanded_url'])
+            if urlparse(urls['expanded_url']).hostname in exp_func_dict:
+                [urls['expanded_url'],text]=exp_func_dict[urlparse(urls['expanded_url']).hostname](urls['expanded_url'],text,url)
+            urls['expanded_url']=urlpp(urls['expanded_url'])
             expanded_url=urls['expanded_url']
         text=text.replace(url,expanded_url)
         urls['display_url']=urls['url']=expanded_url
@@ -104,7 +100,7 @@ def func_url_rewrite(status_dict):
         if 'entities' in status_dict['user']:
             for entry in ['url','description']:
                 try:
-                    if '//t.co/' in status_dict['user']['url']:
+                    if urlparse(status_dict['user']['url']).hostname=='t.co':
                         [status_dict['user'][entry],status_dict['user']['entities'][entry]['urls']]=func_replace_tco(status_dict['user'][entry],status_dict['user']['entities'][entry]['urls'])
                         for entities_entry in status_dict['user'][entry]:
                             entities_entry['indices']=func_reindices(status_dict['user'][entry],entities_entry['url'])
