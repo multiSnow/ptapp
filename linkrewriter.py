@@ -47,8 +47,8 @@ def func_reindices(text,string):
     # locate string in text
     # return [start,end]
 
-    fallback_dict={u'@{0}':u'＠{0}',
-                   u'#{0}':u'＃{0}'}
+    fallback_dict={u'@':u'＠',
+                   u'#':u'＃'}
     lowered_text=text.lower()
     try:
         start=lowered_text.index(string.lower())
