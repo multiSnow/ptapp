@@ -123,6 +123,9 @@ def func_url_rewrite(status_dict):
             elif entities_child=='hashtags':
                 for hashtag in status_dict['entities'][entities_child]:
                     hashtag['indices']=func_reindices(status_dict['text'],u'#{0}'.format(hashtag['text']))
+            elif entities_child=='symbols':
+                for symbols in status_dict['entities'][entities_child]:
+                    symbols['indices']=func_reindices(status_dict['text'],u'${0}'.format(symbols['text']))
 
     return status_dict
 
