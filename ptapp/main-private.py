@@ -142,9 +142,9 @@ class OAuthPage(RequestHandler):
     def get(self):
         self.response.headers['Content-Type']='text/plain'
         self.response.write('oauth_token={0}&oauth_token_secret={1}&user_id={2}&screen_name={3}&x_auth_expires=0'.format(ACCESS_TOKEN,
-                                                                                                                             ACCESS_TOKEN_SECRET,
-                                                                                                                             ACCESS_TOKEN.split('-')[0],
-                                                                                                                             SCREEN_NAME))
+                                                                                                                         ACCESS_TOKEN_SECRET,
+                                                                                                                         ACCESS_TOKEN.split('-')[0],
+                                                                                                                         SCREEN_NAME))
 
 class DummyPage(RequestHandler):
     def get(self):
