@@ -18,7 +18,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 from json import dumps,loads
-from logging import info
+from logging import debug,info
 from threading import Thread
 from urllib import urlencode
 from urlparse import urlparse,urlunparse,parse_qsl
@@ -38,7 +38,7 @@ def urlpp(url_in):
     newquery_list=[]
     for k,v in parse_qsl(url_in_query):
         if k in UNWANTED_QUERY_KEYS:
-            info('remove {0} from {1}'.format(urlencode([(k,v)]),url_in))
+            debug('remove {0} from {1}'.format(urlencode([(k,v)]),url_in))
         else:
             newquery_list.append((k,v))
     return urlunparse((url_in_scm,url_in_netloc,url_in_path,url_in_params,urlencode(newquery_list),url_in_fragment))
