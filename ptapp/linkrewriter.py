@@ -149,10 +149,10 @@ def linkrewriter(content):
 
             for threads in thread_list:
                 threads.join()
-            return dumps(status_list)
+            return dumps(status_list,separators=(',', ':'))
         elif type(status_list)==dict:
             func_write_dict(status_list)
-            return dumps(status_list)
+            return dumps(status_list,separators=(',', ':'))
         else:
             return content
 

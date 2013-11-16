@@ -138,7 +138,7 @@ def statusfilter(content):
                     status.pop(i)
                 else:
                     i+=1
-            return dumps(status)
+            return dumps(status,separators=(',', ':'))
         else:
             return content
     except:

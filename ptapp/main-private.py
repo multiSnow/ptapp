@@ -101,7 +101,7 @@ class MainPage(RequestHandler):
             from json import dumps
             self.response.set_status(503)
             self.response.headers['Content-Type']='application/json'
-            self.response.write(dumps(dict(error=str(error_message))))
+            self.response.write(dumps(dict(error=str(error_message)),separators=(',', ':')))
         else:
             if data.status_code>=500:
                 self.response.headers['Content-Type']='application/json'
