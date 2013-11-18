@@ -19,7 +19,6 @@
 
 from webapp2 import RequestHandler,WSGIApplication
 from logging import debug
-from google.appengine.api import urlfetch
 from urlparse import urlparse,urlunparse,parse_qsl
 from oauth import TwitterClient
 
@@ -86,7 +85,7 @@ class MainPage(RequestHandler):
 
         additional_params=dict([(k,v) for k,v in parse_qsl(orig_body)])
 
-        use_method=urlfetch.GET if method=='GET' else urlfetch.POST
+        use_method=method
 
         try:
             debug('Start communicate to twitter.')

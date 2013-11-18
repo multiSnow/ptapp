@@ -84,7 +84,7 @@ class OAuthClient():
         self.access_url=access_url
         self.callback_url=callback_url
 
-    def prepare_request(self,url,token='',secret='',additional_params=None,method=urlfetch.GET):
+    def prepare_request(self,url,token='',secret='',additional_params=None,method='GET'):
         # Prepare Request.
         #
         # Prepares an authenticated request to any OAuth protected resource.
@@ -118,8 +118,7 @@ class OAuthClient():
         params_str='&'.join(['{0}={1}'.format(encode(k),encode(params[k]))for k in sorted(params)])
 
         # Join the entire message together per the OAuth specification.
-        message='&'.join(['GET' if method == urlfetch.GET else 'POST',
-                          encode(url),encode(params_str)])
+        message='&'.join([method,encode(url),encode(params_str)])
 
         # Create a HMAC-SHA1 signature of the message.
         key='{0}&{1}'.format(self.consumer_secret,secret) # Note compulsory '&'.
@@ -132,7 +131,7 @@ class OAuthClient():
         return urlencode(params).replace('%7E%7E%7E','~')
 
 
-    def make_async_request(self,url,token='',secret='',additional_params=None,protected=False,method=urlfetch.GET):
+    def make_async_request(self,url,token='',secret='',additional_params=None,protected=False,method='GET'):
         # Make Request.
         #
         # Make an authenticated request to any OAuth protected resource.
@@ -151,7 +150,7 @@ class OAuthClient():
 
         payload=self.prepare_request(url,token,secret,additional_params,method)
 
-        if method == urlfetch.GET:
+        if method == 'GET':
             url='{0}?{1}'.format(url,payload)
             payload=None
         headers={'Authorization':'OAuth'} if protected else {}
@@ -160,10 +159,10 @@ class OAuthClient():
         urlfetch.make_fetch_call(rpc,url,method=method,headers=headers,payload=payload)
         return rpc
 
-    def make_request(self,url,token='',secret='',additional_params=None,protected=False,method=urlfetch.GET):
+    def make_request(self,url,token='',secret='',additional_params=None,protected=False,method='GET'):
         data=self.make_async_request(url,token,secret,additional_params,protected,method).get_result()
 
-        if data.status_code!=200:
+        if data.status_code>399:
             debug(data.status_code)
             debug(url)
             debug(token)
@@ -264,7 +263,7 @@ class OAuthClient():
         if 'screen_name' in parsed_results:
             screen_name=parsed_results['screen_name'][0]
 
-        if not (token and secret) or result.status_code != 200:
+        if not (token and secret) or result.status_code>399:
             error('Response Status Code is :{0}'.format(result.status_code))
             error('Could not extract token/secret:{0}'.format(result.content))
             raise OAuthException('Problem talking to the service')
