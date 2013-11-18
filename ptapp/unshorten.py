@@ -144,7 +144,7 @@ def exp_twitpic(url_in,text,url_replace):
 
     twitpic_netloc='twitpic.com'
     twitpic_path='/show/full/{0}'.format(url_id)
-    twitpic_respond=getloc(urlunparse(('https',imgly_netloc,imgly_path,'','','')))
+    twitpic_respond=getloc(urlunparse(('https',twitpic_netloc,twitpic_path,'','','')))
     if twitpic_respond:
         url_in=twitpic_respond
     return [url_in,text]
