@@ -29,6 +29,9 @@ libraries:
 - name: lxml
   version: latest
 
+- name: webapp2
+  version: latest
+
 handlers:
 - url: /robots\.txt
   static_files: static/robots.txt
