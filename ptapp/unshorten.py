@@ -29,16 +29,16 @@ def geturl(url):
     try:
         respond=fetch(url,method='GET',deadline=TIMEOUT)
         return respond.content
-    except:
-        info('Error in GET {0}'.format(url))
+    except Exception as err:
+        info('Error in GET {0}: {1}'.format(url,err))
         return None
 
 def getloc(url):
     try:
-        respond=fetch(dict_inurl,method='HEAD',deadline=TIMEOUT)
+        respond=fetch(url,method='HEAD',deadline=TIMEOUT,follow_redirects=False)
         return respond.headers['location']
-    except:
-        info('Error in HEAD {0}'.format(url))
+    except Exception as err:
+        info('Error in HEAD {0}: {1}'.format(url,err))
         return None
 
 def exp_bitly(url_in,text,url_replace):
@@ -134,6 +134,22 @@ def exp_imgly(url_in,text,url_replace):
         url_in=imgly_respond
     return [url_in,text]
 
+def exp_twitpic(url_in,text,url_replace):
+    url_id=''
+    for string in urlparse(url_in).path.split('/'):
+        if string!='':
+            url_id=string
+    if not url_id:
+        return [url_in,text]
+
+    twitpic_netloc='twitpic.com'
+    twitpic_path='/show/full/{0}'.format(url_id)
+    twitpic_respond=getloc(urlunparse(('https',imgly_netloc,imgly_path,'','','')))
+    if twitpic_respond:
+        url_in=twitpic_respond
+    return [url_in,text]
+
+
 exp_func_dict={'4sq.com':exp_bitly,
                'bit.ly':exp_bitly,
                'bitly.com':exp_bitly,
@@ -145,4 +161,5 @@ exp_func_dict={'4sq.com':exp_bitly,
                'is.gd':exp_isgd,
                'j.mp':exp_bitly,
                'tl.gd':exp_tldg,
+               'twitpic.com':exp_twitpic,
                'www.twitlonger.com':exp_tldg}
