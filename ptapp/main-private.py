@@ -87,7 +87,7 @@ class MainPage(RequestHandler):
             data=client.make_request(url=urlunparse(('https','api.twitter.com','/'.join(path_list),None,self.request.query_string,None)),
                                      token=ACCESS_TOKEN,
                                      secret=ACCESS_TOKEN_SECRET,
-                                     method=request.method,
+                                     method=self.request.method,
                                      protected=True,
                                      additional_params=dict([(k,v) for k,v in parse_qsl(self.request.body)]))
         except Exception as error_message:
