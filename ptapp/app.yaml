@@ -26,9 +26,6 @@ libraries:
 - name: pycrypto
   version: latest
 
-- name: lxml
-  version: latest
-
 - name: webapp2
   version: latest
 

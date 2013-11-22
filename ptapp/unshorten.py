@@ -21,6 +21,8 @@ from json import loads
 from logging import info
 from urllib import urlencode
 from urlparse import urlparse,urlunparse
+from xml.etree.ElementTree import fromstring
+
 from google.appengine.api.urlfetch import fetch
 
 from config import BITLY_LOGIN,BITLY_APIKEY,TIMEOUT
@@ -106,13 +108,12 @@ def exp_tldg(url_in,text,url_replace):
     if not url_id:
         return [url_in,text]
 
-    from lxml.objectify import fromstring
     tldg_netloc='www.twitlonger.com'
     tldg_path='/api_read/{0}'.format(url_id)
     tldg_respond=geturl(urlunparse(('http',tldg_netloc,tldg_path,None,None,None)))
     if tldg_respond:
         try:
-            orig_text=fromstring(tldg_respond)['post']['content'].text
+            orig_text=fromstring(tldg_respond).find('post').find('content').text
             new_text=u'({0})『{1}』'.format(url_replace,orig_text)
             text=text.replace(url_replace,new_text)
         except:
