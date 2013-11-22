@@ -48,7 +48,7 @@ def exp_bitly(url_in,text,url_replace):
     bitly_netloc='api-ssl.bitly.com'
     bitly_path='/v3/expand'
     bitly_query=urlencode([('login',BITLY_LOGIN),('apiKey',BITLY_APIKEY),('shortUrl',url_in)])
-    bitly_respond=geturl(urlunparse(('https',bitly_netloc,bitly_path,'',bitly_query,'')))
+    bitly_respond=geturl(urlunparse(('https',bitly_netloc,bitly_path,None,bitly_query,None)))
     if bitly_respond:
         try:
             url_in=loads(bitly_respond)['data']['expand'][0]['long_url']
@@ -60,7 +60,7 @@ def exp_googl(url_in,text,url_replace):
     googl_netloc='www.googleapis.com'
     googl_path='/urlshortener/v1/url'
     googl_query=urlencode([('shortUrl',url_in)])
-    googl_respond=geturl(urlunparse(('https',googl_netloc,googl_path,'',googl_query,'')))
+    googl_respond=geturl(urlunparse(('https',googl_netloc,googl_path,None,googl_query,None)))
     if googl_respond:
         try:
             url_in=loads(googl_respond)['longUrl']
@@ -72,7 +72,7 @@ def exp_isgd(url_in,text,url_replace):
     isgd_netloc='is.gd'
     isgd_path='/forward.php'
     isgd_query=urlencode([('shorturl',url_in),('format','json')])
-    isgd_respond=geturl(urlunparse(('http',isgd_netloc,isgd_path,'',isgd_query,'')))
+    isgd_respond=geturl(urlunparse(('http',isgd_netloc,isgd_path,None,isgd_query,None)))
     if isgd_respond:
         try:
             url_in=loads(isgd_respond)['url']
@@ -84,7 +84,7 @@ def exp_instaragm(url_in,text,url_replace):
     instaragm_netloc='api.instagram.com'
     instaragm_path='/oembed'
     instaragm_query='url={0}'.format(url_in)
-    instaragm_respond=geturl(urlunparse(('https',instaragm_netloc,instaragm_path,'',instaragm_query,'')))
+    instaragm_respond=geturl(urlunparse(('https',instaragm_netloc,instaragm_path,None,instaragm_query,None)))
     if instaragm_respond:
         try:
             url_in=loads(instaragm_respond)['url']
@@ -109,7 +109,7 @@ def exp_tldg(url_in,text,url_replace):
     from lxml.objectify import fromstring
     tldg_netloc='www.twitlonger.com'
     tldg_path='/api_read/{0}'.format(url_id)
-    tldg_respond=geturl(urlunparse(('http',tldg_netloc,tldg_path,'','','')))
+    tldg_respond=geturl(urlunparse(('http',tldg_netloc,tldg_path,None,None,None)))
     if tldg_respond:
         try:
             orig_text=fromstring(tldg_respond)['post']['content'].text
@@ -129,7 +129,7 @@ def exp_imgly(url_in,text,url_replace):
 
     imgly_netloc='img.ly'
     imgly_path='/show/full/{0}'.format(url_id)
-    imgly_respond=getloc(urlunparse(('https',imgly_netloc,imgly_path,'','','')))
+    imgly_respond=getloc(urlunparse(('https',imgly_netloc,imgly_path,None,None,None)))
     if imgly_respond:
         url_in=imgly_respond
     return [url_in,text]
@@ -144,7 +144,7 @@ def exp_twitpic(url_in,text,url_replace):
 
     twitpic_netloc='twitpic.com'
     twitpic_path='/show/full/{0}'.format(url_id)
-    twitpic_respond=getloc(urlunparse(('https',twitpic_netloc,twitpic_path,'','','')))
+    twitpic_respond=getloc(urlunparse(('https',twitpic_netloc,twitpic_path,None,None,None)))
     if twitpic_respond:
         url_in=twitpic_respond
     return [url_in,text]
