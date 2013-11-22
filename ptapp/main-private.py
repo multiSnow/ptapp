@@ -37,6 +37,16 @@ if API_IMPROVE==1:
 else:
     linkrewriter=lambda t:t
 
+editable_api=[['statuses','mentions_timeline.json'],
+              ['statuses','user_timeline.json'],
+              ['statuses','home_timeline.json'],
+              ['statuses','retweets'],
+              ['statuses','show.json'],
+              ['statuses','show'],
+              ['search','tweets.json'],
+              ['favorites','list.json'],
+              ['lists','statuses.json']]
+
 dummy_msg='''
 <html><head>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
@@ -103,11 +113,10 @@ class MainPage(RequestHandler):
                 self.response.write(data.content)
                 return
             else:
-                if self.request.path.endswith('.json'):
+                if self.request.path.endswith('.json') and self.request.method=='GET' and editable:
                     status=data.content
-                    if self.request.method=='GET':
-                        status=statusfilter(status)
-                        status=linkrewriter(status)
+                    status=statusfilter(status)
+                    status=linkrewriter(status)
                     self.response.write(status)
                 else:
                     self.response.write(data.content)
