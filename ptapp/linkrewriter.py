@@ -29,20 +29,27 @@ if EXP_SHORTURL==1:
 else:
     exp_func_dict=dict()
 
+entites_fulldict={'media':[u'','url'],
+                  'urls':[u'','url'],
+                  'user_mentions':[u'@','screen_name'],
+                  'hashtags':[u'#','text'],
+                  'symbols':[u'$','text']}
+
 def urlpp(url_in):
     parse_result=urlparse(url_in)
     for host in DOMAIN_TO_HTTPS:
         if parse_result.netloc.lower().endswith(host):
             parse_result=parse_result._replace(scheme='https')
             break
-    newquery_list=[]
+    newquery_list,delquery_list=[],[]
     for k,v in parse_qsl(parse_result.query):
         if k in UNWANTED_QUERY_KEYS:
-            debug(u'remove {0} from {1}'.format(urlencode([(k,v)]),url_in))
+            delquery_list.append((k,v))
         else:
             newquery_list.append((k,v))
-    if newquery_list:
+    if delquery_list:
         parse_result=parse_result._replace(query=urlencode(newquery_list))
+        debug(u'remove {0} from {1}'.format(urlencode(delquery_list),url_in))
     return urlunparse(parse_result)
 
 def func_reindices(text,string):
@@ -61,14 +68,14 @@ def func_reindices(text,string):
 
 def func_replace_tco(text,entit_list):
     # replace t.co in text using urls from entit_list.
-    # NOTE: entit_list willl also be modified.
+    # NOTE: entit_list will also be modified.
     # 
-    # url should as below at least:
-    # url['url']==t.co_url
-    # url['expanded_url']==orig_url
-    # url['display_url']==url_to_display
+    # urls should as below at least:
+    # urls['url']==t.co_url
+    # urls['expanded_url']==orig_url
+    # urls['display_url']==url_to_display
     # 
-    # url['media_url_https'] will be tested and processed only when exist
+    # urls['media_url_https'] will be tested and processed only when exist
     # 
     # return [text,extit_list]
 
@@ -76,11 +83,13 @@ def func_replace_tco(text,entit_list):
         if urlparse(urls['url']).hostname!='t.co':
             continue
         url=urls['url']
-        if 'media_url_https' in urls:
+        try:
             urls['expanded_url']=expanded_url=urls['media_url_https']
-        else:
-            if urlparse(urls['expanded_url']).hostname in exp_func_dict:
+        except KeyError:
+            try:
                 [urls['expanded_url'],text]=exp_func_dict[urlparse(urls['expanded_url']).hostname](urls['expanded_url'],text,url)
+            except KeyError:
+                pass
             urls['expanded_url']=urlpp(urls['expanded_url'])
             expanded_url=urls['expanded_url']
         text=text.replace(url,expanded_url)
@@ -89,45 +98,35 @@ def func_replace_tco(text,entit_list):
 
 def func_url_rewrite(status_dict):
     for entry in ['profile_background_image_url','profile_image_url']:
-        if entry in status_dict:
+        try:
             status_dict[entry]=status_dict[entry.replace('image_url','image_url_https')]
-        if 'user' in status_dict:
-            try:
-                status_dict['user'][entry]=status_dict['user'][entry.replace('image_url','image_url_https')]
-            except:
-                info('Error in force https profile image.')
-                pass
+        except KeyError:
+            pass
+        try:
+            status_dict['user'][entry]=status_dict['user'][entry.replace('image_url','image_url_https')]
+        except KeyError:
+            pass
 
-    if 'user' in status_dict:
-        if 'entities' in status_dict['user']:
-            for entry in ['url','description']:
-                try:
-                    if urlparse(status_dict['user']['url']).hostname=='t.co':
-                        [status_dict['user'][entry],status_dict['user']['entities'][entry]['urls']]=func_replace_tco(status_dict['user'][entry],status_dict['user']['entities'][entry]['urls'])
-                        for entities_entry in status_dict['user'][entry]:
-                            entities_entry['indices']=func_reindices(status_dict['user'][entry],entities_entry['url'])
-                except:
-                    pass
+    for entry in ['url','description']:
+        try:
+            [status_dict['user'][entry],status_dict['user']['entities'][entry]['urls']]=func_replace_tco(status_dict['user'][entry],status_dict['user']['entities'][entry]['urls'])
+            for key in status_dict['user']['entities'][entry]['urls']:
+                key['indices']=func_reindices(status_dict['user'][entry],u'{0}{1}'.format(entites_fulldict['urls'][0],key[entites_fulldict['urls'][1]]))
+        except KeyError:
+            pass
 
-    if 'entities' in status_dict:
-        for entities_child in status_dict['entities']:
-            if entities_child=='media' or entities_child=='urls':
-                [status_dict['text'],status_dict['entities'][entities_child]]=func_replace_tco(status_dict['text'],status_dict['entities'][entities_child])
+    for entry in ['media','urls']:
+        try:
+            [status_dict['text'],status_dict['entities'][entry]]=func_replace_tco(status_dict['text'],status_dict['entities'][entry])
+        except KeyError:
+            pass
 
-    if 'entities' in status_dict:
-        for entities_child in status_dict['entities']:
-            if entities_child=='media' or entities_child=='urls':
-                for urls in status_dict['entities'][entities_child]:
-                    urls['indices']=func_reindices(status_dict['text'],urls['url'])
-            elif entities_child=='user_mentions':
-                for user in status_dict['entities'][entities_child]:
-                    user['indices']=func_reindices(status_dict['text'],u'@{0}'.format(user['screen_name']))
-            elif entities_child=='hashtags':
-                for hashtag in status_dict['entities'][entities_child]:
-                    hashtag['indices']=func_reindices(status_dict['text'],u'#{0}'.format(hashtag['text']))
-            elif entities_child=='symbols':
-                for symbols in status_dict['entities'][entities_child]:
-                    symbols['indices']=func_reindices(status_dict['text'],u'${0}'.format(symbols['text']))
+    try:
+        for entry in status_dict['entities']:
+            for key in status_dict['entities'][entry]:
+                key['indices']=func_reindices(status_dict['text'],u'{0}{1}'.format(entites_fulldict[entry][0],key[entites_fulldict[entry][1]]))
+    except KeyError:
+        pass
 
     return status_dict
 
@@ -138,17 +137,22 @@ def func_write_dict(input_dict):
 def linkrewriter(content):
     try:
         status_list=loads(content);
+    except:
+        info('Twitter respond a non-json string.')
+        return content
+    else:
         if type(status_list)==list:
             thread_list=[]
             for status in status_list:
                 mt=Thread(target=func_write_dict,args=(status,))
                 mt.start()
                 thread_list.append(mt)
-                if 'retweeted_status' in status:
+                try:
                     nt=Thread(target=func_write_dict,args=(status['retweeted_status'],))
                     nt.start()
                     thread_list.append(nt)
-
+                except KeyError:
+                    pass
             for threads in thread_list:
                 threads.join()
             return dumps(status_list,separators=(',', ':'))
@@ -157,7 +161,3 @@ def linkrewriter(content):
             return dumps(status_list,separators=(',', ':'))
         else:
             return content
-
-    except:
-        info('Twitter respond a non-json string.')
-        return content
