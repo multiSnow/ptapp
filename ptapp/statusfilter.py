@@ -121,12 +121,7 @@ def check_text(input_dict):
                 return 1
     return 0
 
-def checkfilter(input_dict):
-    try:
-        # return 1 if dict should be filtered
-        return 1 if check_source(input_dict)+check_screen_name(input_dict)+check_url(input_dict)+check_hashtag(input_dict)+check_text(input_dict) else 0
-    except:
-        return 0
+checkfilter=lambda input_dict:check_source(input_dict)+check_screen_name(input_dict)+check_url(input_dict)+check_hashtag(input_dict)+check_text(input_dict)
 
 def statusfilter(content):
     try:
