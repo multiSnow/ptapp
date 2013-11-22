@@ -29,113 +29,133 @@ regexp_dict={'source':FILTER_source,
              'hashtag':FILTER_hashtag,
              'text':FILTER_text}
 
+filterkey={'source':1,
+           'screen_name':2,
+           'url':4,
+           'hashtag':8,
+           'text':16}
+
+def filterrange(fcode):
+    for k in filterkey:
+        if fcode&filterkey[k]:
+            yield k
+
 def check_source(input_dict):
-    # no checking if regexp is empty
-    if not regexp_dict['source']:
-        return 0
     # return 1 if dict should be filtered
-    if 'retweeted_status' in input_dict:
-        if 'source' in input_dict['retweeted_status']:
-            if search(regexp_dict['source'],input_dict['retweeted_status']['source'],IGNORECASE):
-                debug(u'Filtered source: {0}'.format(input_dict['retweeted_status']['source']))
-                return 1
-    else:
-        if 'source' in input_dict:
-            if search(regexp_dict['source'],input_dict['source'],IGNORECASE):
-                debug(u'Filtered source: {0}'.format(input_dict['source']))
-                return 1
-    return 0
+    if not regexp_dict['source']:
+        # no checking if regexp is empty
+        return 0
+    try:
+        if search(regexp_dict['source'],input_dict['retweeted_status']['source'],IGNORECASE):
+            return 1
+    except KeyError:
+        # tweet is not a retweet, go on checking
+        pass
+    try:
+        return 1 if search(regexp_dict['source'],input_dict['source'],IGNORECASE) else 0
+    except KeyError:
+        # tweet is not a tweet, do nothing
+        return 0
 
 def check_screen_name(input_dict):
-    # no checking if regexp is empty
+    # return 2 if dict should be filtered
     if not regexp_dict['screen_name']:
+        # no checking if regexp is empty
         return 0
-    # return 1 if dict should be filtered
-    if 'retweeted_status' in input_dict:
-        if 'user' in input_dict['retweeted_status']:
-            if search(regexp_dict['screen_name'],input_dict['retweeted_status']['user']['screen_name'],IGNORECASE):
-                debug(u'Filtered source: {0}'.format(input_dict['retweeted_status']['user']['screen_name']))
-                return 1
-    else:
-        if 'user' in input_dict:
-            if search(regexp_dict['screen_name'],input_dict['user']['screen_name'],IGNORECASE):
-                debug(u'Filtered source: {0}'.format(input_dict['user']['screen_name']))
-                return 1
-    return 0
+    try:
+        if search(regexp_dict['screen_name'],input_dict['retweeted_status']['user']['screen_name'],IGNORECASE):
+            return 2
+    except KeyError:
+        # tweet is not a retweet, go on checking
+        pass
+    try:
+        return 2 if search(regexp_dict['screen_name'],input_dict['user']['screen_name'],IGNORECASE) else 0
+    except KeyError:
+        # tweet is not a tweet, do nothing
+        return 0
 
 def check_url(input_dict):
-    # no checking if regexp is empty
+    # return 4 if dict should be filtered
     if not regexp_dict['url']:
+        # no checking if regexp is empty
         return 0
-    # return 1 if dict should be filtered
-    if 'retweeted_status' in input_dict:
-        if 'entities' in input_dict['retweeted_status']:
-            for url in input_dict['retweeted_status']['entities']['urls']:
-                if search(regexp_dict['url'],url['expanded_url'],IGNORECASE):
-                    debug(u'Filtered url: {0}'.format(url['expanded_url']))
-                    return 1
-    else:
-        if 'entities' in input_dict:
-            for url in input_dict['entities']['urls']:
-                if search(regexp_dict['url'],url['expanded_url'],IGNORECASE):
-                    debug(u'Filtered url: {0}'.format(url['expanded_url']))
-                    return 1
-    return 0
+    try:
+        for url in input_dict['retweeted_status']['entities']['urls']:
+            if search(regexp_dict['url'],url['expanded_url'],IGNORECASE):
+                return 4
+    except KeyError:
+        # tweet is not a retweet, go on checking
+        pass
+    try:
+        for url in input_dict['entities']['urls']:
+            if search(regexp_dict['url'],url['expanded_url'],IGNORECASE):
+                return 4
+        return 0
+    except KeyError:
+        # tweet is not a tweet, do nothing
+        return 0
 
 def check_hashtag(input_dict):
-    # no checking if regexp is empty
+    # return 8 if dict should be filtered
     if not regexp_dict['hashtag']:
+        # no checking if regexp is empty
         return 0
-    # return 1 if dict should be filtered
-    if 'retweeted_status' in input_dict:
-        if 'entities' in input_dict['retweeted_status']:
-            for hashtag in input_dict['retweeted_status']['entities']['hashtags']:
-                if search(regexp_dict['hashtag'],hashtag['text'],IGNORECASE):
-                    debug(u'Filtered hashtag: {0}'.format(hashtag['text']))
-                    return 1
-    else:
-        if 'entities' in input_dict:
-            for hashtag in input_dict['entities']['hashtags']:
-                if search(regexp_dict['hashtag'],hashtag['text'],IGNORECASE):
-                    debug(u'Filtered hashtag: {0}'.format(hashtag['text']))
-                    return 1
-    return 0
+    try:
+        for hashtag in input_dict['retweeted_status']['entities']['hashtags']:
+            if search(regexp_dict['hashtag'],hashtag['text'],IGNORECASE):
+                return 8
+    except KeyError:
+        # tweet is not a retweet, go on checking
+        pass
+    try:
+        for hashtag in input_dict['entities']['hashtags']:
+            if search(regexp_dict['hashtag'],hashtag['text'],IGNORECASE):
+                return 8
+        return 0
+    except KeyError:
+        # tweet is not a tweet, do nothing
+        return 0
 
 def check_text(input_dict):
-    # no checking if regexp is empty
+    # return 16 if dict should be filtered
     if not regexp_dict['text']:
+        # no checking if regexp is empty
         return 0
-    # return 1 if dict should be filtered
-    if 'retweeted_status' in input_dict:
+    try:
         # only check text in retweeted_status if exists
-        if 'text' in input_dict['retweeted_status']:
-            if search(regexp_dict['text'],input_dict['retweeted_status']['text'],IGNORECASE):
-                debug(u'Filtered text: {0}'.format(input_dict['retweeted_status']['text']))
-                return 1
-            else:
-                return 0
-    else:
-        if 'text' in input_dict:
-            if search(regexp_dict['text'],input_dict['text'],IGNORECASE):
-                debug(u'Filtered text: {0}'.format(input_dict['text']))
-                return 1
-    return 0
+        return 16 if search(regexp_dict['text'],input_dict['retweeted_status']['text'],IGNORECASE) else 0
+    except KeyError:
+        # tweet is not a retweet, go on checking
+        pass
+    try:
+        return 16 if search(regexp_dict['text'],input_dict['text'],IGNORECASE) else 0
+    except KeyError:
+        # tweet is not a tweet, do nothing
+        return 0
 
 checkfilter=lambda input_dict:check_source(input_dict)+check_screen_name(input_dict)+check_url(input_dict)+check_hashtag(input_dict)+check_text(input_dict)
 
 def statusfilter(content):
     try:
         status=loads(content);
+    except:
+        info('Twitter respond a non-json string.')
+        return content
+    else:
         if type(status)==list:
             i=0
             while i<len(status):
-                if checkfilter(status[i]):
-                    del status[i]
+                fcode=checkfilter(status[i])
+                if fcode:
+                    try:
+                        debug(u'Status {0} filtered according to {1}.'.format(status[i]['id_str'],', '.join([s for s in filterrange(fcode)])))
+                    except:
+                        pass
+                    finally:
+                        del status[i]
                 else:
                     i+=1
             return dumps(status,separators=(',', ':'))
         else:
             return content
-    except:
-        info('Twitter respond a non-json string.')
-        return content
+
