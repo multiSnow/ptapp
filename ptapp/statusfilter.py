@@ -135,7 +135,7 @@ def statusfilter(content):
             i=0
             while i<len(status):
                 if checkfilter(status[i]):
-                    status.pop(i)
+                    del status[i]
                 else:
                     i+=1
             return dumps(status,separators=(',', ':'))
