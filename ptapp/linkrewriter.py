@@ -30,18 +30,20 @@ else:
     exp_func_dict=dict()
 
 def urlpp(url_in):
-    (url_in_scm,url_in_netloc,url_in_path,url_in_params,url_in_query,url_in_fragment)=urlparse(url_in)
+    parse_result=urlparse(url_in)
     for host in DOMAIN_TO_HTTPS:
-        if url_in_netloc.lower().endswith(host):
-            url_in_scm='https'
+        if parse_result.netloc.lower().endswith(host):
+            parse_result=parse_result._replace(scheme='https')
             break
     newquery_list=[]
-    for k,v in parse_qsl(url_in_query):
+    for k,v in parse_qsl(parse_result.query):
         if k in UNWANTED_QUERY_KEYS:
             debug(u'remove {0} from {1}'.format(urlencode([(k,v)]),url_in))
         else:
             newquery_list.append((k,v))
-    return urlunparse((url_in_scm,url_in_netloc,url_in_path,url_in_params,urlencode(newquery_list),url_in_fragment))
+    if newquery_list:
+        parse_result=parse_result._replace(query=urlencode(newquery_list))
+    return urlunparse(parse_result)
 
 def func_reindices(text,string):
     # locate string in text
