@@ -41,5 +41,5 @@ handlers:
   secure: always
 
 - url: /.*
-  script: main-private.app
+  script: main.app
   secure: always
