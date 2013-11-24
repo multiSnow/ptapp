@@ -19,6 +19,7 @@
 
 from json import dumps
 from logging import debug
+from time import clock,time
 from urllib import urlencode
 from urlparse import urlparse,urlunparse,parse_qsl
 
@@ -107,7 +108,10 @@ class MainPage(RequestHandler):
                 return
             else:
                 if self.request.path.endswith('.json') and self.request.method=='GET' and editable:
+                    sc,st=clock(),time()
                     self.response.write(ppatp(data.content))
+                    ec,et=clock(),time()
+                    debug('use {0:.4f} processor time in {1:.4f} second'.format(ec-sc,et-st))
                 else:
                     self.response.write(data.content)
         return
