@@ -132,32 +132,4 @@ def func_url_rewrite(status_dict):
 
 def func_write_dict(input_dict):
     input_dict=func_url_rewrite(input_dict)
-    return 0
-
-def linkrewriter(content):
-    try:
-        status_list=loads(content);
-    except:
-        info('Twitter respond a non-json string.')
-        return content
-    else:
-        if type(status_list)==list:
-            thread_list=[]
-            for status in status_list:
-                mt=Thread(target=func_write_dict,args=(status,))
-                mt.start()
-                thread_list.append(mt)
-                try:
-                    nt=Thread(target=func_write_dict,args=(status['retweeted_status'],))
-                    nt.start()
-                    thread_list.append(nt)
-                except KeyError:
-                    pass
-            for threads in thread_list:
-                threads.join()
-            return dumps(status_list,separators=(',', ':'))
-        elif type(status_list)==dict:
-            func_write_dict(status_list)
-            return dumps(status_list,separators=(',', ':'))
-        else:
-            return content
+    return

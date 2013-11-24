@@ -24,18 +24,9 @@ from urlparse import urlparse,urlunparse,parse_qsl
 
 from webapp2 import RequestHandler,WSGIApplication
 
-from config import CONSUMER_KEY,CONSUMER_SECRET,SCREEN_NAME,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,USER_PASSWORD,API_IMPROVE,FILTER
+from config import CONSUMER_KEY,CONSUMER_SECRET,SCREEN_NAME,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,USER_PASSWORD
 from oauth import TwitterClient
-
-if FILTER==1:
-    from statusfilter import statusfilter
-else:
-    statusfilter=lambda t:t
-
-if API_IMPROVE==1:
-    from linkrewriter import linkrewriter
-else:
-    linkrewriter=lambda t:t
+from ppatp import ppatp
 
 editable_api=[['statuses','mentions_timeline.json'],
               ['statuses','user_timeline.json'],
@@ -114,10 +105,7 @@ class MainPage(RequestHandler):
                 return
             else:
                 if self.request.path.endswith('.json') and self.request.method=='GET' and editable:
-                    status=data.content
-                    status=statusfilter(status)
-                    status=linkrewriter(status)
-                    self.response.write(status)
+                    self.response.write(ppatp(data.content))
                 else:
                     self.response.write(data.content)
         return

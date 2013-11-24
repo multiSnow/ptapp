@@ -133,29 +133,16 @@ def check_text(input_dict):
         # tweet is not a tweet, do nothing
         return 0
 
-checkfilter=lambda input_dict:check_source(input_dict)+check_screen_name(input_dict)+check_url(input_dict)+check_hashtag(input_dict)+check_text(input_dict)
-
-def statusfilter(content):
-    try:
-        status=loads(content);
-    except:
-        info('Twitter respond a non-json string.')
-        return content
-    else:
-        if type(status)==list:
-            i=0
-            while i<len(status):
-                fcode=checkfilter(status[i])
-                if fcode:
-                    try:
-                        debug(u'Status {0} filtered according to {1}.'.format(status[i]['id_str'],', '.join([s for s in filterrange(fcode)])))
-                    except:
-                        pass
-                    finally:
-                        del status[i]
-                else:
-                    i+=1
-            return dumps(status,separators=(',', ':'))
+def genefilter(l):
+    while l:
+        d=l.pop(0)
+        fcode=check_source(d)+check_screen_name(d)+check_url(d)+check_hashtag(d)+check_text(d)
+        if fcode:
+            try:
+                debug(u'Status {0} filtered according to {1}.'.format(d['id_str'],', '.join([s for s in filterrange(fcode)])))
+            except:
+                pass
+            finally:
+                del d
         else:
-            return content
-
+            yield d
