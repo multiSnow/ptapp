@@ -82,6 +82,8 @@ class MainPage(RequestHandler):
                                            ('screen_name',SCREEN_NAME),
                                            ('x_auth_expires',0)]))
             return
+        else:
+            editable=(path_list[2:4] in editable_api)
 
         client=TwitterClient(CONSUMER_KEY,CONSUMER_SECRET,None)
         try:
