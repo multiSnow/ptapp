@@ -32,7 +32,7 @@ from ppatp import ppatp
 editable_api=[['statuses','mentions_timeline.json'],
               ['statuses','user_timeline.json'],
               ['statuses','home_timeline.json'],
-              ['statuses','retweets'],
+              ['statuses','statuses','retweets_of_me.json'],
               ['statuses','show.json'],
               ['statuses','show'],
               ['search','tweets.json'],
@@ -111,7 +111,7 @@ class MainPage(RequestHandler):
                     sc,st=clock(),time()
                     self.response.write(ppatp(data.content))
                     ec,et=clock(),time()
-                    debug('use {0:.4f} processor time in {1:.4f} second'.format(ec-sc,et-st))
+                    debug('use {0:.2f} processor time in {1:.4f} second'.format(ec-sc,et-st))
                 else:
                     self.response.write(data.content)
         return
