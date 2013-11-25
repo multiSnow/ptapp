@@ -37,10 +37,13 @@ else:
 
 def threadmap(func,gentor):
     def gerthread(f,g):
+        l=[]
         for i in g:
             t=Thread(target=f,args=(i,))
             t.start()
-            yield t
+            l.append(t)
+        while l:
+            yield l.pop(0)
     for t in gerthread(func,gentor):
         t.join()
 
