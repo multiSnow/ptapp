@@ -37,15 +37,12 @@ else:
 
 def threadmap(func,gentor):
     def gerthread(f,g):
-        l=[]
         for i in g:
             t=Thread(target=f,args=(i,))
             t.start()
-            l.append(t)
-        while l:
-            yield l.pop(0)
-    for t in gerthread(func,gentor):
-        t.join()
+            yield t
+    for s in [t for t in gerthread(func,gentor)]:
+        s.join()
 
 def locgen(g,l):
     for d in g:
