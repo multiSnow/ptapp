@@ -18,14 +18,14 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 from json import dumps
-from logging import debug
+from logging import debug,info
 from time import clock,time
 from urllib import urlencode
-from urlparse import urlparse,urlunparse,parse_qsl
+from urlparse import parse_qs,parse_qsl,urlparse,urlunparse
 
 from webapp2 import RequestHandler,WSGIApplication
 
-from config import CONSUMER_KEY,CONSUMER_SECRET,SCREEN_NAME,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,USER_PASSWORD
+from config import CONSUMER_KEY,CONSUMER_SECRET,SCREEN_NAME,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,USER_PASSWORD,GAPLESS
 from oauth import TwitterClient
 from ppatp import ppatp
 
@@ -86,6 +86,19 @@ class MainPage(RequestHandler):
         else:
             editable=(path_list[2:4] in editable_api)
 
+        if GAPLESS and 'since_id' in parse_qs(self.request.query_string):
+            qsdict={k:v for k,v in parse_qsl(self.request.query_string)}
+            qsdict.update(count=800)
+            qsdict.update(since_id=int(qsdict['since_id'])-10000)
+            self.request.query_string=urlencode(qsdict)
+            tcqdict=dict(path_list=path_list,
+                         qsdict=qsdict,
+                         token=self.ACCESS_TOKEN,
+                         secret=self.ACCESS_TOKEN_SECRET,
+                         body=self.request.body)
+        else:
+            tcqdict=None
+
         client=TwitterClient(CONSUMER_KEY,CONSUMER_SECRET,None)
         try:
             data=client.make_request(url=urlunparse(('https','api.twitter.com','/'.join(path_list),None,self.request.query_string,None)),
@@ -101,15 +114,22 @@ class MainPage(RequestHandler):
             self.response.write(dumps(dict(error=str(error_message)),separators=(',', ':')))
             return
         else:
-            self.response.set_status(data.status_code)
+            try:
+                self.response.set_status(data.status_code)
+            except KeyError:
+                # GAE does not support special HTTP Status Codes, so it will be logged here and set the status to 403
+                # probably 429
+                info('Invalid HTTP status code: {0}'.format(data.status_code))
+                self.response.set_status(403)
             self.response.headers['Content-Type']=data.headers['Content-Type']
             if data.status_code>399:
+                info(data.status_code)
                 self.response.write(data.content)
                 return
             else:
                 if self.request.path.endswith('.json') and self.request.method=='GET' and editable:
                     sc,st=clock(),time()
-                    self.response.write(ppatp(data.content))
+                    self.response.write(ppatp(data.content,tcqdict=tcqdict))
                     ec,et=clock(),time()
                     debug('use {0:.2f} processor time in {1:.4f} second'.format(ec-sc,et-st))
                 else:

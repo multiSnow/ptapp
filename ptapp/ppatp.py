@@ -22,6 +22,7 @@ from logging import debug,info
 from threading import Thread
 
 from config import API_IMPROVE,FILTER
+from gaplesslize import gaplesslize
 
 if FILTER==1:
     from statusfilter import genefilter
@@ -51,20 +52,25 @@ def locgen(g,l):
         if 'retweeted_status' in d:
             yield d['retweeted_status']
 
-def ppatp(content):
+def ppatp(content,client=None,tcqdict=None):
     try:
         status=loads(content);
     except:
         info('Twitter respond a non-json string.')
         return content
     else:
-        if type(status) is list:
+        if status and type(status) is list:
             ctnlist=[]
+            gaplesslize(status,tcqdict)
             threadmap(func_write_dict,locgen(genefilter(status),ctnlist))
             return dumps(ctnlist,separators=(',', ':'))
-        elif type(status) is dict:
+        elif status and type(status) is dict:
             func_write_dict(status)
             return dumps(status,separators=(',', ':'))
-        else:
+        elif status:
             # I'm not sure whether there will be any other type
+            info('unrecognized type: {0}'.format(type(status).__name__))
+            return content
+        else:
+            # empty response
             return content
