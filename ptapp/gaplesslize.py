@@ -31,12 +31,15 @@ def gaplesslize(status_list,tcqdict):
         sc,st=clock(),time()
         client=TwitterClient(CONSUMER_KEY,CONSUMER_SECRET,None)
         qsdict=tcqdict['qsdict']
-        real_since_id=int(qsdict['since_id'])+10000
+        real_since_id=int(qsdict['since_id'])+tcqdict['offset']
         if int(status_list[-1]['id_str'])<=real_since_id:
             del status_list[-1]
             debug('already gaplessed.')
             return
-        qsdict.update(since_id=real_since_id-10000)
+        elif int(status_list[-1]['id_str'])-real_since_id<tcqdict['offset']/2:
+            # buggy client requested
+            debug('already gaplessed (buggy).'.format(len(status_list)))
+            return
         retry=2
         while True:
             if retry==0:
@@ -70,6 +73,7 @@ def gaplesslize(status_list,tcqdict):
                         if not new_status_list:
                             # empty list after delete duplicate tweet
                             info('empty list after delete duplicate tweet')
+                            debug('Gaplessly, totally {0} tweet.'.format(len(status_list)))
                             break
                         status_list.extend(new_status_list)
                         if int(status_list[-1]['id_str'])<=real_since_id:
@@ -77,8 +81,12 @@ def gaplesslize(status_list,tcqdict):
                             del status_list[-1]
                             debug('Gaplessly, totally {0} tweet.'.format(len(status_list)))
                             break
+                        elif int(status_list[-1]['id_str'])-real_since_id<tcqdict['offset']/2:
+                            # buggy client requested
+                            debug('Gaplessly, totally {0} tweet (buggy).'.format(len(status_list)))
+                            break
                     else:
-                        debug('twitter return a empty list, should be gapless.')
+                        debug('twitter return an empty list, should be gapless.')
                         # empty list, should be gapless
                         break
         ec,et=clock(),time()

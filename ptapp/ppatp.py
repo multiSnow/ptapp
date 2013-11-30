@@ -20,6 +20,7 @@
 from json import dumps,loads
 from logging import debug,info
 from threading import Thread
+from time import clock,time
 
 from config import API_IMPROVE,FILTER
 from gaplesslize import gaplesslize
@@ -60,12 +61,22 @@ def ppatp(content,client=None,tcqdict=None):
         return content
     else:
         if status and type(status) is list:
+            sc,st=clock(),time()
             ctnlist=[]
             gaplesslize(status,tcqdict)
+            before_len=len(status)
             threadmap(func_write_dict,locgen(genefilter(status),ctnlist))
+            after_len=len(ctnlist)
+            if before_len!=after_len:
+                debug('{0} received, {1} sent.'.format(before_len,after_len))
+            ec,et=clock(),time()
+            debug('use {0:.2f} processor time in {1:.4f} second'.format(ec-sc,et-st))
             return dumps(ctnlist,separators=(',', ':'))
         elif status and type(status) is dict:
+            sc,st=clock(),time()
             func_write_dict(status)
+            ec,et=clock(),time()
+            debug('use {0:.2f} processor time in {1:.4f} second'.format(ec-sc,et-st))
             return dumps(status,separators=(',', ':'))
         elif status:
             # I'm not sure whether there will be any other type

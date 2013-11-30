@@ -19,7 +19,6 @@
 
 from json import dumps
 from logging import debug,info
-from time import clock,time
 from urllib import urlencode
 from urlparse import parse_qs,parse_qsl,urlparse,urlunparse
 
@@ -88,14 +87,16 @@ class MainPage(RequestHandler):
 
         if GAPLESS and 'since_id' in parse_qs(self.request.query_string):
             qsdict={k:v for k,v in parse_qsl(self.request.query_string)}
-            qsdict.update(count=800)
-            qsdict.update(since_id=int(qsdict['since_id'])-10000)
+            offset=10000
+            qsdict.update(count=200)
+            qsdict.update(since_id=int(qsdict['since_id'])-offset)
             self.request.query_string=urlencode(qsdict)
             tcqdict=dict(path_list=path_list,
                          qsdict=qsdict,
                          token=self.ACCESS_TOKEN,
                          secret=self.ACCESS_TOKEN_SECRET,
-                         body=self.request.body)
+                         body=self.request.body,
+                         offset=offset)
         else:
             tcqdict=None
 
@@ -128,10 +129,7 @@ class MainPage(RequestHandler):
                 return
             else:
                 if self.request.path.endswith('.json') and self.request.method=='GET' and editable:
-                    sc,st=clock(),time()
                     self.response.write(ppatp(data.content,tcqdict=tcqdict))
-                    ec,et=clock(),time()
-                    debug('use {0:.2f} processor time in {1:.4f} second'.format(ec-sc,et-st))
                 else:
                     self.response.write(data.content)
         return
