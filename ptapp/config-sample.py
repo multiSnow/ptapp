@@ -1,7 +1,7 @@
 #coding: utf8
 # Project PTAPP
 #
-# Copyright (c) 2012, multiSnow <infinity.blick.winkel@gmail.com>
+# Copyright (c) 2014, multiSnow <infinity.blick.winkel@gmail.com>
 #
 # Permission to use, copy, modify, and/or distribute this software for
 # any purpose with or without fee is hereby granted, provided that the
