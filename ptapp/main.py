@@ -31,7 +31,7 @@ from ppatp import ppatp
 editable_api=[['statuses','mentions_timeline.json'],
               ['statuses','user_timeline.json'],
               ['statuses','home_timeline.json'],
-              ['statuses','statuses','retweets_of_me.json'],
+              ['statuses','retweets_of_me.json'],
               ['statuses','show.json'],
               ['statuses','show'],
               ['search','tweets.json'],
@@ -64,17 +64,17 @@ class MainPage(RequestHandler):
 
     def api(self):
 
-        path_list=self.request.path.split('/')
-        if path_list.pop(1)!=USER_PASSWORD:
+        path_list=self.request.path.rstrip('/').split('/')
+        if len(path_list)<2 or path_list.pop(1)!=USER_PASSWORD:
             self.response.headers['Content-Type']='text/html'
             self.response.set_status(404)
             self.response.write(dummy_msg.format(self.request.path_qs))
             return
-        elif path_list==[''] or path_list==['','']:
+        elif path_list==['']:
             self.response.headers['Content-Type']='text/html'
             self.response.write(work_msg.format(SCREEN_NAME,self.request.host))
             return
-        elif path_list[2:]==['oauth','access_token']:
+        elif path_list[-2:]==['oauth','access_token']:
             self.response.headers['Content-Type']='text/plain'
             self.response.write(urlencode([('oauth_token',ACCESS_TOKEN),
                                            ('oauth_token_secret',ACCESS_TOKEN_SECRET),
@@ -83,7 +83,7 @@ class MainPage(RequestHandler):
                                            ('x_auth_expires',0)]))
             return
         else:
-            editable=(path_list[2:4] in editable_api)
+            editable=(path_list[-2:] in editable_api)
 
         if GAPLESS and 'since_id' in parse_qs(self.request.query_string):
             qsdict={k:v for k,v in parse_qsl(self.request.query_string)}
