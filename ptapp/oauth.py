@@ -26,10 +26,7 @@ from urlparse import urlparse,urlunparse,parse_qsl
 
 from google.appengine.api import urlfetch
 
-def ychoice(seq,cnt):
-    for i in xrange(cnt):
-        yield choice(seq)
-seqstr='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwkyz'
+seqstr='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
 class OAuthClient():
 
@@ -48,7 +45,7 @@ class OAuthClient():
         params={'oauth_consumer_key':self.consumer_key,
                 'oauth_signature_method':'HMAC-SHA1',
                 'oauth_timestamp':str(int(time())),
-                'oauth_nonce':''.join(s for s in ychoice(seqstr,64)),
+                'oauth_nonce':''.join(list(choice(seqstr) for i in xrange(64))),
                 'oauth_version':'1.0'}
 
         if token:
