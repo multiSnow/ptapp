@@ -24,7 +24,9 @@ from urlparse import parse_qs,parse_qsl,urlparse,urlunparse
 
 from webapp2 import RequestHandler,WSGIApplication
 
-from config import CONSUMER_KEY,CONSUMER_SECRET,SCREEN_NAME,ACCESS_TOKEN,ACCESS_TOKEN_SECRET,USER_PASSWORD,GAPLESS
+from account_config import ACCOUNTS
+from authinfo import dec_info,md5sum
+from config import CONSUMER_KEY,CONSUMER_SECRET,GAPLESS
 from oauth import TwitterClient
 from ppatp import ppatp
 
@@ -47,7 +49,8 @@ dummy_msg='''
 <h1>Error: Not Found</h1>
 <h2>The requested URL <code>{0}</code> was not found on this server.</h2>
 <h2></h2>
-</body></html>'''
+</body></html>
+'''
 
 work_msg='''
 <html><head>
@@ -65,25 +68,30 @@ class MainPage(RequestHandler):
     def api(self):
 
         path_list=self.request.path.rstrip('/').split('/')
-        if len(path_list)<2 or path_list.pop(1)!=USER_PASSWORD:
+        try:
+            passwd=path_list.pop(1)
+            [self.SCREEN_NAME,self.ACCESS_TOKEN,self.ACCESS_TOKEN_SECRET]=dec_info(passwd,ACCOUNTS[md5sum(passwd)])
+        except:
+            # show 'Not Found' on any error about authentication
             self.response.headers['Content-Type']='text/html'
             self.response.set_status(404)
             self.response.write(dummy_msg.format(self.request.path_qs))
             return
-        elif path_list==['']:
-            self.response.headers['Content-Type']='text/html'
-            self.response.write(work_msg.format(SCREEN_NAME,self.request.host))
-            return
-        elif path_list[-2:]==['oauth','access_token']:
-            self.response.headers['Content-Type']='text/plain'
-            self.response.write(urlencode([('oauth_token',ACCESS_TOKEN),
-                                           ('oauth_token_secret',ACCESS_TOKEN_SECRET),
-                                           ('user_id',ACCESS_TOKEN.split('-')[0]),
-                                           ('screen_name',SCREEN_NAME),
-                                           ('x_auth_expires',0)]))
-            return
         else:
-            editable=(path_list[-2:] in editable_api)
+            if path_list==['']:
+                self.response.headers['Content-Type']='text/html'
+                self.response.write(work_msg.format(self.SCREEN_NAME,self.request.host))
+                return
+            elif path_list[-2:]==['oauth','access_token']:
+                self.response.headers['Content-Type']='text/plain'
+                self.response.write(urlencode([('oauth_token',self.ACCESS_TOKEN),
+                                               ('oauth_token_secret',self.ACCESS_TOKEN_SECRET),
+                                               ('user_id',self.ACCESS_TOKEN.split('-')[0]),
+                                               ('screen_name',self.SCREEN_NAME),
+                                               ('x_auth_expires',0)]))
+                return
+            else:
+                editable=(path_list[-2:] in editable_api)
 
         if GAPLESS and 'since_id' in parse_qs(self.request.query_string):
             qsdict={k:v for k,v in parse_qsl(self.request.query_string)}
@@ -103,8 +111,8 @@ class MainPage(RequestHandler):
         client=TwitterClient(CONSUMER_KEY,CONSUMER_SECRET,None)
         try:
             data=client.make_request(url=urlunparse(('https','api.twitter.com','/'.join(path_list),None,self.request.query_string,None)),
-                                     token=ACCESS_TOKEN,
-                                     secret=ACCESS_TOKEN_SECRET,
+                                     token=self.ACCESS_TOKEN,
+                                     secret=self.ACCESS_TOKEN_SECRET,
                                      method=self.request.method,
                                      protected=True,
                                      additional_params=dict([(k,v) for k,v in parse_qsl(self.request.body)]))

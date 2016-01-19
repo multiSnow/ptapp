@@ -17,12 +17,13 @@
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-from hashlib import sha1
-from hmac import new as hmac
-from random import choice
 from time import time
 from urllib import quote as urlquote,quote_plus as urlquote_plus,unquote as urlunquote
 from urlparse import urlparse,urlunparse,parse_qsl
+
+from Crypto.Hash import SHA as sha1
+from Crypto.Hash.HMAC import new as hmac
+from Crypto.Random.random import choice
 
 from google.appengine.api import urlfetch
 

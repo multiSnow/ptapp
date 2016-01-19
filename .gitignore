@@ -1,4 +1,6 @@
 *~
 *.pyc
 *.pyo
+ptapp/account_config.py
 ptapp/config.py
+account.list
