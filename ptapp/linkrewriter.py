@@ -43,10 +43,8 @@ def urlpp(url_in):
             break
     newquery_list,delquery_list=[],[]
     for k,v in parse_qsl(parse_result.query):
-        if k in UNWANTED_QUERY_KEYS:
-            delquery_list.append((k,v))
-        else:
-            newquery_list.append((k,v))
+        if k in UNWANTED_QUERY_KEYS:delquery_list.append((k,v))
+        else:newquery_list.append((k,v))
     if delquery_list:
         parse_result=parse_result._replace(query=urlencode(newquery_list))
         debug(u'remove {0} from {1}'.format(urlencode(delquery_list),url_in))
@@ -59,10 +57,12 @@ def func_reindices(text,string):
     fallback_dict={u'@':u'＠',
                    u'#':u'＃'}
     lowered_text=text.lower()
+    start=0
     try:
         start=lowered_text.index(string.lower())
     except ValueError:
-        start=lowered_text.index(u'{0}{1}'.format(fallback_dict[string[0]],string.lower()[1:]))
+        try:start=lowered_text.index((fallback_dict[string[0]]+string[1:]).lower())
+        except ValueError:raise KeyError
     end=start+len(string)
     return [start,end]
 
@@ -79,21 +79,34 @@ def func_replace_tco(text,entit_list):
     # 
     # return [text,extit_list]
 
+    repld={}
     for urls in entit_list:
-        if urlparse(urls['url']).hostname!='t.co':
-            continue
+        if urlparse(urls['url']).hostname!='t.co':continue
         url=urls['url']
-        try:
-            urls['expanded_url']=expanded_url=urls['media_url_https']
-        except KeyError:
-            try:
-                [urls['expanded_url'],text]=exp_func_dict[urlparse(urls['expanded_url']).hostname](urls['expanded_url'],text,url)
+        if 'video_info' in urls and 'variants' in urls['video_info']:
+            ct,br=None,-1
+            for video in urls['video_info']['variants']:
+                if not ct:
+                    ct=video['content_type']
+                    expanded_url=video['url']
+                    if 'bitrate' in video:br=video['bitrate']
+                elif 'bitrate' in video and video['bitrate']>br:
+                    ct=video['content_type']
+                    expanded_url=video['url']
+                    br=video['bitrate']
+            urls['expanded_url']=expanded_url
+        else:
+            try:urls['expanded_url']=expanded_url=urls['media_url_https']
             except KeyError:
-                pass
-            urls['expanded_url']=urlpp(urls['expanded_url'])
-            expanded_url=urls['expanded_url']
-        text=text.replace(url,expanded_url)
+                try:[urls['expanded_url'],text]=exp_func_dict[urlparse(urls['expanded_url']).hostname](urls['expanded_url'],text,url)
+                except KeyError:pass
+                urls['expanded_url']=urlpp(urls['expanded_url'])
+                expanded_url=urls['expanded_url']
         urls['display_url']=urls['url']=expanded_url
+        if url not in repld:repld[url]=[]
+        repld[url].append(expanded_url)
+    for k,v in repld.items():
+        text=text.replace(k,' '.join(v))
     return [text,entit_list]
 
 def func_url_rewrite(status_dict):
@@ -111,25 +124,31 @@ def func_url_rewrite(status_dict):
         try:
             [status_dict['user'][entry],status_dict['user']['entities'][entry]['urls']]=func_replace_tco(status_dict['user'][entry],status_dict['user']['entities'][entry]['urls'])
             for key in status_dict['user']['entities'][entry]['urls']:
-                key['indices']=func_reindices(status_dict['user'][entry],u'{0}{1}'.format(entites_fulldict['urls'][0],key[entites_fulldict['urls'][1]]))
+                key['indices']=func_reindices(status_dict['user'][entry],(entites_fulldict['urls'][0]+key[entites_fulldict['urls'][1]]))
         except KeyError:
             pass
 
-    for entry in ['media','urls']:
-        try:
-            [status_dict['text'],status_dict['entities'][entry]]=func_replace_tco(status_dict['text'],status_dict['entities'][entry])
-        except KeyError:
-            pass
+    if 'extended_entities' in status_dict:
+        try:[status_dict['text'],status_dict['extended_entities']['media']]=func_replace_tco(status_dict['text'],status_dict['extended_entities']['media'])
+        except KeyError:pass
+    else:
+        try:[status_dict['text'],status_dict['entities']['media']]=func_replace_tco(status_dict['text'],status_dict['entities']['media'])
+        except KeyError:pass
 
+    try:[status_dict['text'],status_dict['entities']['urls']]=func_replace_tco(status_dict['text'],status_dict['entities']['urls'])
+    except KeyError:pass
     try:
         for entry in status_dict['entities']:
             for key in status_dict['entities'][entry]:
                 key['indices']=func_reindices(status_dict['text'],u'{0}{1}'.format(entites_fulldict[entry][0],key[entites_fulldict[entry][1]]))
-    except KeyError:
-        pass
+    except KeyError:pass
+    try:
+        for entry in status_dict['extended_entities']:
+            for key in status_dict['extended_entities'][entry]:
+                key['indices']=func_reindices(status_dict['text'],u'{0}{1}'.format(entites_fulldict[entry][0],key[entites_fulldict[entry][1]]))
+    except KeyError:pass
 
-    return status_dict
+    return
 
 def func_write_dict(input_dict):
-    input_dict=func_url_rewrite(input_dict)
-    return
+    func_url_rewrite(input_dict)
