@@ -50,8 +50,6 @@ def locgen(g,l):
     for d in g:
         l.append(d)
         yield d
-        if 'retweeted_status' in d:
-            yield d['retweeted_status']
 
 def ppatp(content,client=None,tcqdict=None):
     try:

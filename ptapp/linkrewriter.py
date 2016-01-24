@@ -29,8 +29,8 @@ if EXP_SHORTURL==1:
 else:
     exp_func_dict=dict()
 
-entites_fulldict={'media':[u'','url'],
-                  'urls':[u'','url'],
+entites_fulldict={'media':[u'','display_url'],
+                  'urls':[u'','display_url'],
                   'user_mentions':[u'@','screen_name'],
                   'hashtags':[u'#','text'],
                   'symbols':[u'$','text']}
@@ -66,7 +66,7 @@ def func_reindices(text,string):
     end=start+len(string)
     return [start,end]
 
-def func_replace_tco(text,entit_list):
+def func_replace_tco(text,entit_list,extmedia={}):
     # replace t.co in text using urls from entit_list.
     # NOTE: entit_list will also be modified.
     # 
@@ -88,25 +88,29 @@ def func_replace_tco(text,entit_list):
             for video in urls['video_info']['variants']:
                 if not ct:
                     ct=video['content_type']
-                    expanded_url=video['url']
                     if 'bitrate' in video:br=video['bitrate']
+                    expanded_url=video['url']
                 elif 'bitrate' in video and video['bitrate']>br:
                     ct=video['content_type']
-                    expanded_url=video['url']
                     br=video['bitrate']
-            urls['expanded_url']=expanded_url
+                    expanded_url=video['url']
+            try:extmedia[urls['id_str']]=expanded_url
+            except KeyError:pass
         else:
-            try:urls['expanded_url']=expanded_url=urls['media_url_https']
+            try:expanded_url=urls['media_url']=urls['media_url_https']
             except KeyError:
-                try:[urls['expanded_url'],text]=exp_func_dict[urlparse(urls['expanded_url']).hostname](urls['expanded_url'],text,url)
+                try:[expanded_url,text]=exp_func_dict[urlparse(urls['expanded_url']).hostname](urls['expanded_url'],text,url)
+                except KeyError:expanded_url=urls['expanded_url']
+                expanded_url=urlpp(expanded_url)
+            else:
+                try:expanded_url=extmedia[urls['id_str']]
                 except KeyError:pass
-                urls['expanded_url']=urlpp(urls['expanded_url'])
-                expanded_url=urls['expanded_url']
-        urls['display_url']=urls['url']=expanded_url
+        urls['display_url']=urls['expanded_url']=urls['url']=expanded_url
         if url not in repld:repld[url]=[]
         repld[url].append(expanded_url)
     for k,v in repld.items():
         text=text.replace(k,' '.join(v))
+    repld.clear()
     return [text,entit_list]
 
 def func_url_rewrite(status_dict):
@@ -125,18 +129,18 @@ def func_url_rewrite(status_dict):
             [status_dict['user'][entry],status_dict['user']['entities'][entry]['urls']]=func_replace_tco(status_dict['user'][entry],status_dict['user']['entities'][entry]['urls'])
             for key in status_dict['user']['entities'][entry]['urls']:
                 key['indices']=func_reindices(status_dict['user'][entry],(entites_fulldict['urls'][0]+key[entites_fulldict['urls'][1]]))
-        except KeyError:
-            pass
+        except KeyError:pass
+
+    sourceidd={}
 
     if 'extended_entities' in status_dict:
-        try:[status_dict['text'],status_dict['extended_entities']['media']]=func_replace_tco(status_dict['text'],status_dict['extended_entities']['media'])
+        try:[status_dict['text'],status_dict['extended_entities']['media']]=func_replace_tco(status_dict['text'],status_dict['extended_entities']['media'],extmedia=sourceidd)
         except KeyError:pass
-    else:
-        try:[status_dict['text'],status_dict['entities']['media']]=func_replace_tco(status_dict['text'],status_dict['entities']['media'])
-        except KeyError:pass
-
+    try:[status_dict['text'],status_dict['entities']['media']]=func_replace_tco(status_dict['text'],status_dict['entities']['media'],extmedia=sourceidd)
+    except KeyError:pass
     try:[status_dict['text'],status_dict['entities']['urls']]=func_replace_tco(status_dict['text'],status_dict['entities']['urls'])
     except KeyError:pass
+
     try:
         for entry in status_dict['entities']:
             for key in status_dict['entities'][entry]:
@@ -152,3 +156,7 @@ def func_url_rewrite(status_dict):
 
 def func_write_dict(input_dict):
     func_url_rewrite(input_dict)
+    if 'retweeted_status' in input_dict:
+        func_write_dict(input_dict['retweeted_status'])
+    if 'quoted_status' in input_dict:
+        func_write_dict(input_dict['quoted_status'])
