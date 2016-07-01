@@ -82,18 +82,6 @@ def exp_isgd(url_in,text,url_replace):
             info('invailid respond from isgd: {0}'.format(isgd_respond))
     return url_in,text
 
-def exp_instaragm(url_in,text,url_replace):
-    instaragm_netloc='api.instagram.com'
-    instaragm_path='/oembed'
-    instaragm_query='url={0}'.format(url_in)
-    instaragm_respond=geturl(urlunparse(('https',instaragm_netloc,instaragm_path,None,instaragm_query,None)))
-    if instaragm_respond:
-        try:
-            url_in=loads(instaragm_respond)['url']
-        except:
-            info('invailid respond from instaragm: {0}'.format(instaragm_respond))
-    return url_in,text
-
 def exp_tldg(url_in,text,url_replace):
     p=urlparse(url_in)
     try:
@@ -157,8 +145,6 @@ exp_func_dict={'4sq.com':exp_bitly,
                'buff.ly':exp_bitly,
                'goo.gl':exp_googl,
                'img.ly':exp_imgly,
-               'instagr.am':exp_instaragm,
-               'instagram.com':exp_instaragm,
                'is.gd':exp_isgd,
                'j.mp':exp_bitly,
                'tl.gd':exp_tldg,
