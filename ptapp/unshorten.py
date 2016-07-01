@@ -46,7 +46,7 @@ def getloc(url):
 def exp_bitly(url_in,text,url_replace):
     if not (BITLY_LOGIN and BITLY_APIKEY):
         info('no BITLY_LOGIN and BITLY_APIKEY, do nothing')
-        return [url_in,text]
+        return url_in,text
     bitly_netloc='api-ssl.bitly.com'
     bitly_path='/v3/expand'
     bitly_query=urlencode([('login',BITLY_LOGIN),('apiKey',BITLY_APIKEY),('shortUrl',url_in)])
@@ -56,7 +56,7 @@ def exp_bitly(url_in,text,url_replace):
             url_in=loads(bitly_respond)['data']['expand'][0]['long_url']
         except:
             info('invailid respond from bitly: {0}'.format(bitly_respond))
-    return [url_in,text]
+    return url_in,text
 
 def exp_googl(url_in,text,url_replace):
     googl_netloc='www.googleapis.com'
@@ -68,7 +68,7 @@ def exp_googl(url_in,text,url_replace):
             url_in=loads(googl_respond)['longUrl']
         except:
             info('invailid respond from googl: {0}'.format(googl_respond))
-    return [url_in,text]
+    return url_in,text
 
 def exp_isgd(url_in,text,url_replace):
     isgd_netloc='is.gd'
@@ -80,7 +80,7 @@ def exp_isgd(url_in,text,url_replace):
             url_in=loads(isgd_respond)['url']
         except:
             info('invailid respond from isgd: {0}'.format(isgd_respond))
-    return [url_in,text]
+    return url_in,text
 
 def exp_instaragm(url_in,text,url_replace):
     instaragm_netloc='api.instagram.com'
@@ -92,7 +92,7 @@ def exp_instaragm(url_in,text,url_replace):
             url_in=loads(instaragm_respond)['url']
         except:
             info('invailid respond from instaragm: {0}'.format(instaragm_respond))
-    return [url_in,text]
+    return url_in,text
 
 def exp_tldg(url_in,text,url_replace):
     p=urlparse(url_in)
@@ -106,7 +106,7 @@ def exp_tldg(url_in,text,url_replace):
     except:
         url_id=None
     if not url_id:
-        return [url_in,text]
+        return url_in,text
 
     tldg_netloc='www.twitlonger.com'
     tldg_path='/api_read/{0}'.format(url_id)
@@ -118,7 +118,7 @@ def exp_tldg(url_in,text,url_replace):
             text=text.replace(url_replace,new_text)
         except:
             info('invailid respond from tldg: {0}'.format(tldg_respond))
-    return [url_in,text]
+    return url_in,text
 
 def exp_imgly(url_in,text,url_replace):
     url_id=''
@@ -126,14 +126,14 @@ def exp_imgly(url_in,text,url_replace):
         if string!='':
             url_id=string
     if not url_id:
-        return [url_in,text]
+        return url_in,text
 
     imgly_netloc='img.ly'
     imgly_path='/show/full/{0}'.format(url_id)
     imgly_respond=getloc(urlunparse(('https',imgly_netloc,imgly_path,None,None,None)))
     if imgly_respond:
         url_in=imgly_respond
-    return [url_in,text]
+    return url_in,text
 
 def exp_twitpic(url_in,text,url_replace):
     url_id=''
@@ -141,14 +141,14 @@ def exp_twitpic(url_in,text,url_replace):
         if string!='':
             url_id=string
     if not url_id:
-        return [url_in,text]
+        return url_in,text
 
     twitpic_netloc='twitpic.com'
     twitpic_path='/show/full/{0}'.format(url_id)
     twitpic_respond=getloc(urlunparse(('https',twitpic_netloc,twitpic_path,None,None,None)))
     if twitpic_respond:
         url_in=twitpic_respond
-    return [url_in,text]
+    return url_in,text
 
 
 exp_func_dict={'4sq.com':exp_bitly,
