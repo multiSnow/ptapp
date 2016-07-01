@@ -92,8 +92,9 @@ class MainPage(RequestHandler):
                 return
             else:
                 editable=(path_list[-2:] in editable_api)
+                if 'get_original_rest=1' in self.request.query_string:editable=False
 
-        if GAPLESS and 'since_id' in parse_qs(self.request.query_string):
+        if GAPLESS and editable and 'since_id' in parse_qs(self.request.query_string):
             qsdict={k:v for k,v in parse_qsl(self.request.query_string)}
             offset=10000
             qsdict.update(count=200)
@@ -115,7 +116,7 @@ class MainPage(RequestHandler):
                                      secret=self.ACCESS_TOKEN_SECRET,
                                      method=self.request.method,
                                      protected=True,
-                                     additional_params=dict([(k,v) for k,v in parse_qsl(self.request.body)]))
+                                     additional_params={k:v for k,v in parse_qsl(self.request.body)})
         except Exception as error_message:
             debug(error_message)
             self.response.set_status(503)
