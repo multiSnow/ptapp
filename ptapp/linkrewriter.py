@@ -18,7 +18,6 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 from json import dumps,loads
-from logging import debug,info
 from threading import Thread
 from urllib import urlencode
 from urlparse import urlparse,urlunparse,parse_qsl
@@ -28,12 +27,6 @@ if EXP_SHORTURL==1:
     from unshorten import exp_func_dict
 else:
     exp_func_dict=dict()
-
-entites_fulldict={'media':[u'','display_url'],
-                  'urls':[u'','display_url'],
-                  'user_mentions':[u'@','screen_name'],
-                  'hashtags':[u'#','text'],
-                  'symbols':[u'$','text']}
 
 def urlpp(url_in):
     parse_result=urlparse(url_in)
@@ -47,116 +40,176 @@ def urlpp(url_in):
         else:newquery_list.append((k,v))
     if delquery_list:
         parse_result=parse_result._replace(query=urlencode(newquery_list))
-        debug(u'remove {0} from {1}'.format(urlencode(delquery_list),url_in))
+        debug(u'remove {} from {}'.format(urlencode(delquery_list),url_in))
     return urlunparse(parse_result)
 
 def func_reindices(text,string):
     # locate string in text
     # return [start,end]
-
-    fallback_dict={u'@':u'＠',
-                   u'#':u'＃'}
-    lowered_text=text.lower()
     start=0
-    try:
-        start=lowered_text.index(string.lower())
-    except ValueError:
-        try:start=lowered_text.index((fallback_dict[string[0]]+string[1:]).lower())
-        except ValueError:raise KeyError
+    try:start=text.lower().index(string.lower())
+    except ValueError:info(u'failed reindices: {}, {}'.format(text,string))
     end=start+len(string)
-    return [start,end]
+    return start,end
 
-def func_replace_tco(text,entit_list,extmedia={}):
-    # replace t.co in text using urls from entit_list.
-    # NOTE: entit_list will also be modified.
-    # 
-    # urls should as below at least:
-    # urls['url']==t.co_url
-    # urls['expanded_url']==orig_url
-    # urls['display_url']==url_to_display
-    # 
-    # urls['media_url_https'] will be tested and processed only when exist
-    # 
-    # return [text,extit_list]
+def func_entities_hashtags(text,entitl,stlist=[]):
+    text=text.replace(u'＃',u'#')
+    for hashtags in entitl:
+        stlist.append((u'#{}'.format(hashtags['text']),hashtags))
+    return text
 
-    repld={}
-    for urls in entit_list:
-        if urlparse(urls['url']).hostname!='t.co':continue
-        url=urls['url']
-        if 'video_info' in urls and 'variants' in urls['video_info']:
-            ct,br=None,-1
-            for video in urls['video_info']['variants']:
-                if not ct:
-                    ct=video['content_type']
-                    if 'bitrate' in video:br=video['bitrate']
-                    expanded_url=video['url']
-                elif 'bitrate' in video and video['bitrate']>br:
-                    ct=video['content_type']
-                    br=video['bitrate']
-                    expanded_url=video['url']
-            try:extmedia[urls['id_str']]=expanded_url
-            except KeyError:pass
-        else:
-            try:expanded_url=urls['media_url']=urls['media_url_https']
-            except KeyError:
-                try:[expanded_url,text]=exp_func_dict[urlparse(urls['expanded_url']).hostname](urls['expanded_url'],text,url)
-                except KeyError:expanded_url=urls['expanded_url']
-                expanded_url=urlpp(expanded_url)
-            else:
-                try:expanded_url=extmedia[urls['id_str']]
-                except KeyError:pass
-        urls['display_url']=urls['expanded_url']=urls['url']=expanded_url
-        if url not in repld:repld[url]=[]
-        repld[url].append(expanded_url)
-    for k,v in repld.items():
-        text=text.replace(k,' '.join(v))
-    repld.clear()
-    return [text,entit_list]
+def func_entities_symbols(text,entitl,stlist=[]):
+    for symbols in entitl:
+        stlist.append((u'${}'.format(symbols['text']),symbols))
+    return text
+
+def func_entities_urls(text,entitl,stlist=[]):
+    for url in entitl:
+        if urlparse(url['url']).hostname!='t.co':continue
+        origurl=url['url']
+        try:expanded_url,text=exp_func_dict[urlparse(url['expanded_url']).hostname](url['expanded_url'],text,origurl)
+        except KeyError:expanded_url=url['expanded_url']
+        expanded_url=urlpp(expanded_url)
+        url['display_url']=url['expanded_url']=url['url']=expanded_url
+        text=text.replace(origurl,expanded_url)
+    for url in entitl:
+        stlist.append((url['expanded_url'],url))
+    return text
+
+def func_entities_user_mentions(text,entitl,stlist=[]):
+    text=text.replace(u'＠',u'@')
+    for user_mentions in entitl:
+        stlist.append((u'@{}'.format(user_mentions['screen_name']),user_mentions))
+    return text
+
+def func_entit_media(text,media,stlist=[]):
+    realurl=media['media_url_https']
+    stlist.append((realurl,media))
+    text=text.replace(media['url'],realurl)
+    media.update(display_url=realurl,
+                 expanded_url=realurl,
+                 media_url=realurl,
+                 media_url_https=realurl,
+                 url=realurl)
+    return text
+
+def func_entities_media(text,entitl,stlist=[]):
+    for media in entitl:
+        text=func_entit_media(text,media,stlist=stlist)
+    return text
+
+def func_extend_media_photo(media,stlist=[]):
+    realurl=media['media_url_https']
+    media.update(display_url=realurl,
+                 expanded_url=realurl,
+                 media_url=realurl,
+                 url=realurl)
+    stlist.append((realurl,media))
+
+def func_extend_media_video(media,stlist=[]):
+    ct,br,realurl=None,-1,None
+    for video in media['video_info']['variants']:
+        if 'bitrate' not in video:continue
+        if video['bitrate']>br:
+            ct=video['content_type']
+            br=video['bitrate']
+            realurl=video['url']
+    media.update(display_url=realurl,
+                 expanded_url=realurl,
+                 media_url=realurl,
+                 media_url_https=realurl,
+                 url=realurl)
+    stlist.append((realurl,media))
+
+def func_extend_media(text,entitl,extentitl,stlist=[]):
+    urld,urll,c={},[],0
+    for media in extentitl:
+        origurl=media['url']
+        func=func_extend_media_photo if 'photo' in media['type'] else func_extend_media_video
+        func(media,stlist=stlist)
+        if origurl not in urld:urld[origurl]=[]
+        urld[origurl].append({k:media[k] for k in ('id','id_str','media_url',
+                                                   'media_url_https','url',
+                                                   'display_url','expanded_url',
+                                                   'sizes','type','indices',)})
+    while c<len(entitl):
+        origurl=entitl[c]['url']
+        if origurl not in urld:
+            text=func_entit_media(text,entitl[c],stlist=stlist)
+            c+=1
+            continue
+        if not urld[origurl]:raise KeyError(entitl[c]['url'])
+        entitl[c:c+1]=urld[origurl]
+        c+=len(urld[origurl])
+        urll.append((origurl,[m['media_url_https'] for m in urld[origurl]]))
+        stlist.extend([(m['media_url_https'],m) for m in  urld[origurl]])
+    for ourl,nurls in urll:
+        text=text.replace(ourl,' '.join(nurls))
+    return text
+
+entites_funcdict={'hashtags':func_entities_hashtags,
+                  'symbols':func_entities_symbols,
+                  'urls':func_entities_urls,
+                  'user_mentions':func_entities_user_mentions,}
+
+def func_entities(text,entitl,etype,stlist=[]):
+    # replace t.co in text using entities.
+    # entitl edited in-place.
+    # return text
+    return entites_funcdict[etype](text,entitl,stlist=stlist) if etype in entites_funcdict else text
+
+def func_profile_image(status_dict,entry,idstr):
+    status_dict[entry]=status_dict[entry.replace('image_url','image_url_https')]
+
+def func_user_link(user_dict,entry,idstr):
+    ustlist=[]
+    user_dict[entry]=func_entities(user_dict[entry],
+                                   user_dict['entities'][entry]['urls'],
+                                   'urls',
+                                   stlist=ustlist)
+    for s,t in ustlist:
+        if 'indices' not in t:raise KeyError(s)
+        t['indices']=func_reindices(user_dict[entry],s)
 
 def func_url_rewrite(status_dict):
-    for entry in ['profile_background_image_url','profile_image_url']:
-        try:
-            status_dict[entry]=status_dict[entry.replace('image_url','image_url_https')]
-        except KeyError:
-            pass
-        try:
-            status_dict['user'][entry]=status_dict['user'][entry.replace('image_url','image_url_https')]
-        except KeyError:
-            pass
 
-    for entry in ['url','description']:
-        try:
-            [status_dict['user'][entry],status_dict['user']['entities'][entry]['urls']]=func_replace_tco(status_dict['user'][entry],status_dict['user']['entities'][entry]['urls'])
-            for key in status_dict['user']['entities'][entry]['urls']:
-                key['indices']=func_reindices(status_dict['user'][entry],(entites_fulldict['urls'][0]+key[entites_fulldict['urls'][1]]))
-        except KeyError:pass
+    textkey='full_text' if 'full_text' in status_dict else 'text'
 
-    sourceidd={}
+    for entry in ('profile_background_image_url','profile_image_url'):
+        if entry in status_dict:func_profile_image(status_dict,entry,status_dict['id_str'])
+        if entry in status_dict['user']:func_profile_image(status_dict['user'],entry,status_dict['id_str'])
+
+    for entry in ('url','description'):
+        if entry in status_dict['user'] and status_dict['user'][entry]:func_user_link(status_dict['user'],entry,status_dict['id_str'])
+
+    sstlist=[]
 
     if 'extended_entities' in status_dict:
-        try:[status_dict['text'],status_dict['extended_entities']['media']]=func_replace_tco(status_dict['text'],status_dict['extended_entities']['media'],extmedia=sourceidd)
-        except KeyError:pass
-    try:[status_dict['text'],status_dict['entities']['media']]=func_replace_tco(status_dict['text'],status_dict['entities']['media'],extmedia=sourceidd)
-    except KeyError:pass
-    try:[status_dict['text'],status_dict['entities']['urls']]=func_replace_tco(status_dict['text'],status_dict['entities']['urls'])
-    except KeyError:pass
+        status_dict[textkey]=func_extend_media(status_dict[textkey],
+                                               status_dict['entities']['media'],
+                                               status_dict['extended_entities']['media'],
+                                               stlist=sstlist)
+    elif 'media' in status_dict['entities']:
+        status_dict[textkey]=func_entities_media(status_dict[textkey],
+                                                 status_dict['entities']['media'],
+                                                 stlist=sstlist)
 
-    try:
-        for entry in status_dict['entities']:
-            for key in status_dict['entities'][entry]:
-                key['indices']=func_reindices(status_dict['text'],u'{0}{1}'.format(entites_fulldict[entry][0],key[entites_fulldict[entry][1]]))
-    except KeyError:pass
-    try:
-        for entry in status_dict['extended_entities']:
-            for key in status_dict['extended_entities'][entry]:
-                key['indices']=func_reindices(status_dict['text'],u'{0}{1}'.format(entites_fulldict[entry][0],key[entites_fulldict[entry][1]]))
-    except KeyError:pass
+    for entry in ('urls','hashtags','user_mentions','symbols'):
+        status_dict[textkey]=func_entities(status_dict[textkey],status_dict['entities'][entry],entry,stlist=sstlist)
+    for s,t in sstlist:
+        if 'indices' not in t:raise KeyError(s)
+        t['indices']=func_reindices(status_dict[textkey],s)
+
+    status_dict['possibly_sensitive_appealable']=status_dict['possibly_sensitive']=False
 
     return
 
 def func_write_dict(input_dict):
-    func_url_rewrite(input_dict)
+    textkey='full_text' if 'full_text' in input_dict else 'text'
     if 'retweeted_status' in input_dict:
         func_write_dict(input_dict['retweeted_status'])
+        input_dict[textkey]=u'♺ @{} {}'.format(input_dict['retweeted_status']['user']['screen_name'],input_dict['retweeted_status'][textkey])
     if 'quoted_status' in input_dict:
         func_write_dict(input_dict['quoted_status'])
+        input_dict[textkey]=u'{} 『({}) {}』'.format(input_dict[textkey],input_dict['quoted_status']['user']['screen_name'],input_dict['quoted_status'][textkey])
+    func_url_rewrite(input_dict)
