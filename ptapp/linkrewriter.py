@@ -201,6 +201,7 @@ def func_url_rewrite(status_dict):
         t['indices']=func_reindices(status_dict[textkey],s)
 
     status_dict['possibly_sensitive_appealable']=status_dict['possibly_sensitive']=False
+    status_dict.pop('display_text_range',None)
 
     return
 
