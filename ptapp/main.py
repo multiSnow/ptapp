@@ -20,7 +20,7 @@
 from json import dumps
 from logging import debug,info
 from urllib import urlencode
-from urlparse import parse_qs,parse_qsl,urlparse,urlunparse
+from urlparse import parse_qsl,urlparse,urlunparse
 
 from webapp2 import RequestHandler,WSGIApplication
 
@@ -94,20 +94,22 @@ class MainPage(RequestHandler):
                 editable=(path_list[-2:] in editable_api)
                 if 'get_original_rest=1' in self.request.query_string:editable=False
 
-        if GAPLESS and editable and 'since_id' in parse_qs(self.request.query_string):
+        tcqdict=None
+        if editable:
             qsdict={k:v for k,v in parse_qsl(self.request.query_string)}
-            offset=10000
-            qsdict.update(count=200)
-            qsdict.update(since_id=int(qsdict['since_id'])-offset)
+            qsdict.update(tweet_mode='extended')
             self.request.query_string=urlencode(qsdict)
-            tcqdict=dict(path_list=path_list,
-                         qsdict=qsdict,
-                         token=self.ACCESS_TOKEN,
-                         secret=self.ACCESS_TOKEN_SECRET,
-                         body=self.request.body,
-                         offset=offset)
-        else:
-            tcqdict=None
+            if GAPLESS and 'since_id' in qsdict:
+                offset=10000
+                qsdict.update(count=200)
+                qsdict.update(since_id=int(qsdict['since_id'])-offset)
+                self.request.query_string=urlencode(qsdict)
+                tcqdict=dict(path_list=path_list,
+                             qsdict=qsdict,
+                             token=self.ACCESS_TOKEN,
+                             secret=self.ACCESS_TOKEN_SECRET,
+                             body=self.request.body,
+                             offset=offset)
 
         client=TwitterClient(CONSUMER_KEY,CONSUMER_SECRET,None)
         try:
