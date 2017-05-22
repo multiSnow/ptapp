@@ -116,8 +116,7 @@ def func_extend_media_video(media,stlist=[]):
             realurl=video['url']
     media.update(display_url=realurl,
                  expanded_url=realurl,
-                 media_url=realurl,
-                 media_url_https=realurl,
+                 media_url=media['media_url_https'],
                  url=realurl)
     stlist.append((realurl,media))
 
@@ -141,8 +140,8 @@ def func_extend_media(text,entitl,extentitl,stlist=[]):
         if not urld[origurl]:raise KeyError(entitl[c]['url'])
         entitl[c:c+1]=urld[origurl]
         c+=len(urld[origurl])
-        urll.append((origurl,[m['media_url_https'] for m in urld[origurl]]))
-        stlist.extend([(m['media_url_https'],m) for m in  urld[origurl]])
+        urll.append((origurl,[m['expanded_url'] for m in urld[origurl]]))
+        stlist.extend([(m['expanded_url'],m) for m in urld[origurl]])
     for ourl,nurls in urll:
         text=text.replace(ourl,' '.join(nurls))
     return text
@@ -177,7 +176,7 @@ def func_url_rewrite(status_dict):
 
     for entry in ('profile_background_image_url','profile_image_url'):
         if entry in status_dict:func_profile_image(status_dict,entry,status_dict['id_str'])
-        if entry in status_dict['user']:func_profile_image(status_dict['user'],entry,status_dict['id_str'])
+        if entry in status_dict.setdefault('user',{}):func_profile_image(status_dict['user'],entry,status_dict['id_str'])
 
     for entry in ('url','description'):
         if entry in status_dict['user'] and status_dict['user'][entry]:func_user_link(status_dict['user'],entry,status_dict['id_str'])
@@ -189,7 +188,7 @@ def func_url_rewrite(status_dict):
                                                status_dict['entities']['media'],
                                                status_dict['extended_entities']['media'],
                                                stlist=sstlist)
-    elif 'media' in status_dict['entities']:
+    elif 'media' in status_dict.setdefault('entities',dict(hashtags=[],symbols=[],user_mentions=[],urls=[])):
         status_dict[textkey]=func_entities_media(status_dict[textkey],
                                                  status_dict['entities']['media'],
                                                  stlist=sstlist)
@@ -201,6 +200,7 @@ def func_url_rewrite(status_dict):
         t['indices']=func_reindices(status_dict[textkey],s)
 
     status_dict['possibly_sensitive_appealable']=status_dict['possibly_sensitive']=False
+    if textkey!='text':status_dict['text']=status_dict[textkey]
     status_dict.pop('display_text_range',None)
 
     return
